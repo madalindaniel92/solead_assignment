@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -24,7 +25,8 @@ func main() {
 	checkErr(err)
 
 	for _, result := range results {
-		fmt.Printf("Domain: %q\n", result.Domain)
+		domain := result.Domain
+		fmt.Printf("Domain: %s://%s\n", domain.Scheme, domain.Hostname())
 	}
 }
 
@@ -38,6 +40,17 @@ func usage() {
 func checkErr(err error) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %q\n", err)
+		printExtraErrInfo(err)
 		os.Exit(1)
+	}
+}
+
+func printExtraErrInfo(err error) {
+	switch value := errors.Unwrap(err).(type) {
+	case scrappy.ErrInvalidCSVLines:
+		for _, invalidLine := range value {
+			fmt.Fprintf(os.Stderr, "Invalid line %d %q: %s\n",
+				invalidLine.Index, invalidLine.Line, invalidLine.Err)
+		}
 	}
 }
