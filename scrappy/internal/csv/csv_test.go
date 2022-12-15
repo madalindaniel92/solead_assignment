@@ -165,6 +165,72 @@ func TestParseCSV_invalidLines(t *testing.T) {
 	}
 }
 
+func TestParseURL(t *testing.T) {
+	testCases := []struct {
+		name     string
+		url      string
+		expected url.URL
+	}{
+		{
+			name:     "valid URL",
+			url:      "https://en.wikipedia.org",
+			expected: url.URL{Scheme: "https", Host: "en.wikipedia.org"},
+		},
+		{
+			name:     "http URL",
+			url:      "http://why_no_tsl.org",
+			expected: url.URL{Scheme: "http", Host: "why_no_tsl.org"},
+		},
+		{
+			name:     "domain without scheme",
+			url:      "example.com",
+			expected: url.URL{Scheme: "https", Host: "example.com"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := csv.ParseURL(tc.url)
+			checkNoErr(t, err)
+
+			if *result != tc.expected {
+				t.Errorf("Expected %+v, got %+v instead", tc.expected, *result)
+			}
+		})
+	}
+}
+
+func TestParseURL_failure(t *testing.T) {
+	testCases := []struct {
+		name        string
+		url         string
+		expectedErr error
+	}{
+		{
+			name:        "invalid URL",
+			url:         "https://en wikipedia dot org",
+			expectedErr: csv.ErrInvalidURL,
+		},
+		{
+			name:        "invalid URL scheme",
+			url:         "redis://some-host.com",
+			expectedErr: csv.ErrInvalidURLScheme,
+		},
+		{
+			name:        "missing URL",
+			url:         "",
+			expectedErr: csv.ErrMissingURLHost,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := csv.ParseURL(tc.url)
+			checkErrIs(t, err, tc.expectedErr)
+		})
+	}
+}
+
 // Helpers
 
 func checkNoErr(t *testing.T, err error) {
@@ -179,6 +245,6 @@ func checkErrIs(t *testing.T, err error, expected error) {
 	t.Helper()
 
 	if !errors.Is(err, expected) {
-		t.Fatalf("Expected error %q, got %q instead", expected, err)
+		t.Fatalf("Expected error %q, got %q (%T) instead", expected, err, err)
 	}
 }

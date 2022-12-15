@@ -8,7 +8,9 @@ import (
 var (
 	ErrInvalidCSVHeader = errors.New("csv file has invalid header")
 	ErrEmptyCSV         = errors.New("empty CSV")
+	ErrInvalidURL       = errors.New("invalid URL")
 	ErrMissingURLHost   = errors.New("missing URL host")
+	ErrInvalidURLScheme = errors.New("invalid url scheme")
 )
 
 // We don't want to spam stdout with more than maxInvalidLines in case too many URLs

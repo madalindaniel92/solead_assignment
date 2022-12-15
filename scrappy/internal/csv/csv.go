@@ -57,7 +57,7 @@ func ParseCSV(reader io.Reader) ([]Website, error) {
 			continue
 		}
 
-		parsedURL, err := parseURL(line)
+		parsedURL, err := ParseURL(line)
 		if err != nil {
 			invalidLines = invalidLines.Append(err, line, index)
 			continue
@@ -92,24 +92,30 @@ func checkCSVHeader(line, expected string) error {
 	return nil
 }
 
-func parseURL(rawURL string) (*url.URL, error) {
+func ParseURL(rawURL string) (*url.URL, error) {
+	rawURL = strings.TrimSpace(rawURL)
+	if rawURL == "" {
+		return nil, ErrMissingURLHost
+	}
+
+	// If we don't have the URL scheme, we assume it is "https://"
+	if !strings.Contains(rawURL, "://") {
+		rawURL = fmt.Sprintf("https://%s", rawURL)
+	}
+
 	result, err := url.Parse(rawURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %s", ErrInvalidURL, err)
 	}
 
-	// Since we don't have the scheme, we assume it is "https://"
-	if result.Scheme == "" {
-		// We need to reparse to extract URL correctly
-		result, err = url.Parse("https://" + rawURL)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
+	// Check that the domain host is present
 	if result.Host == "" {
 		return nil, fmt.Errorf("%w: %s", ErrMissingURLHost, rawURL)
+	}
+
+	// Only allow http and https URLs
+	if result.Scheme != "http" && result.Scheme != "https" {
+		return nil, fmt.Errorf("%w: %s", ErrInvalidURLScheme, result.Scheme)
 	}
 
 	return result, nil
