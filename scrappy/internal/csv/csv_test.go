@@ -1,4 +1,4 @@
-package scrappy_test
+package csv_test
 
 import (
 	"errors"
@@ -6,14 +6,14 @@ import (
 	"strings"
 	"testing"
 
-	"examples/scrappy"
+	"examples/scrappy/internal/csv"
 )
 
 func TestParseCSV(t *testing.T) {
 	testCases := []struct {
 		name     string
 		body     string
-		expected []scrappy.Website
+		expected []csv.Website
 	}{
 		{
 			name: "valid domains",
@@ -22,7 +22,7 @@ func TestParseCSV(t *testing.T) {
 				https://google.com
 				http://example.com
 			`,
-			expected: []scrappy.Website{
+			expected: []csv.Website{
 				{Domain: url.URL{Host: "en.wikipedia.org", Scheme: "https"}},
 				{Domain: url.URL{Host: "google.com", Scheme: "https"}},
 				{Domain: url.URL{Host: "example.com", Scheme: "http"}},
@@ -35,7 +35,7 @@ func TestParseCSV(t *testing.T) {
 				mazautoglass.com
 				melatee.com
 				timent.com`,
-			expected: []scrappy.Website{
+			expected: []csv.Website{
 				{Domain: url.URL{Host: "bostonzen.org", Scheme: "https"}},
 				{Domain: url.URL{Host: "mazautoglass.com", Scheme: "https"}},
 				{Domain: url.URL{Host: "melatee.com", Scheme: "https"}},
@@ -48,7 +48,7 @@ func TestParseCSV(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			reader := strings.NewReader(tc.body)
 
-			results, err := scrappy.ParseCSV(reader)
+			results, err := csv.ParseCSV(reader)
 			checkNoErr(t, err)
 
 			if len(results) != len(tc.expected) {
@@ -85,14 +85,14 @@ func TestParseCSV_failure(t *testing.T) {
 			name: "empty file",
 			body: "",
 			// we expect the file to have the "domain" header
-			expectedErr: scrappy.ErrEmptyCSV,
+			expectedErr: csv.ErrEmptyCSV,
 		},
 		{
 			name: "invalid header",
 			body: `first_name, last_name, address
 				Daniel, Smith, Someplace Nice 42
 			`,
-			expectedErr: scrappy.ErrInvalidCSVHeader,
+			expectedErr: csv.ErrInvalidCSVHeader,
 		},
 	}
 
@@ -100,7 +100,7 @@ func TestParseCSV_failure(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			reader := strings.NewReader(tc.body)
 
-			_, err := scrappy.ParseCSV(reader)
+			_, err := csv.ParseCSV(reader)
 			checkErrIs(t, err, tc.expectedErr)
 		})
 	}
@@ -115,7 +115,7 @@ func TestParseCSV_invalidLines(t *testing.T) {
 		expectedIndexes []int
 		// even though we have invalid lines,
 		// we still return the results that are valid
-		expectedResults []scrappy.Website
+		expectedResults []csv.Website
 	}{
 		{
 			name: "invalid domains",
@@ -126,10 +126,10 @@ func TestParseCSV_invalidLines(t *testing.T) {
 				dragons-are-awesome.com
 				not quite valid either
 				melatee.com`,
-			expectedErr:     scrappy.ErrInvalidCSVLines{},
+			expectedErr:     csv.ErrInvalidCSVLines{},
 			expectedIndexes: []int{2, 5}, // lines 2 and 5 are invalid
 			// even though we have invalid lines,
-			expectedResults: []scrappy.Website{
+			expectedResults: []csv.Website{
 				{Domain: url.URL{Host: "bostonzen.org", Scheme: "https"}},
 				{Domain: url.URL{Host: "mazautoglass.com", Scheme: "https"}},
 				{Domain: url.URL{Host: "mazautoglass.com", Scheme: "https"}},
@@ -142,10 +142,10 @@ func TestParseCSV_invalidLines(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			reader := strings.NewReader(tc.body)
 
-			_, err := scrappy.ParseCSV(reader)
+			_, err := csv.ParseCSV(reader)
 			checkErrIs(t, err, tc.expectedErr)
 
-			errLines, _ := err.(scrappy.ErrInvalidCSVLines)
+			errLines, _ := err.(csv.ErrInvalidCSVLines)
 
 			if len(errLines) != len(tc.expectedIndexes) {
 				t.Fatalf("Expected %d invalid lines, got %d instead",

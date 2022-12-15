@@ -1,4 +1,4 @@
-package scrappy
+package csv
 
 import (
 	"errors"
@@ -8,7 +8,7 @@ import (
 var (
 	ErrInvalidCSVHeader = errors.New("csv file has invalid header")
 	ErrEmptyCSV         = errors.New("empty CSV")
-	ErrMissingURLHost   = errors.New("missing URl host")
+	ErrMissingURLHost   = errors.New("missing URL host")
 )
 
 // We don't want to spam stdout with more than maxInvalidLines in case too many URLs

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"examples/scrappy"
+	"examples/scrappy/internal/csv"
 )
 
 func main() {
@@ -21,7 +21,7 @@ func main() {
 		checkErr(fmt.Errorf("missing csv file"))
 	}
 
-	results, err := scrappy.LoadFromFile(*csvFile)
+	results, err := csv.LoadFromFile(*csvFile)
 	checkErr(err)
 
 	for _, result := range results {
@@ -47,7 +47,7 @@ func checkErr(err error) {
 
 func printExtraErrInfo(err error) {
 	switch value := errors.Unwrap(err).(type) {
-	case scrappy.ErrInvalidCSVLines:
+	case csv.ErrInvalidCSVLines:
 		for _, invalidLine := range value {
 			fmt.Fprintf(os.Stderr, "Invalid line %d %q: %s\n",
 				invalidLine.Index, invalidLine.Line, invalidLine.Err)

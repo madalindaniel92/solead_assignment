@@ -1,4 +1,4 @@
-package scrappy
+package csv
 
 import (
 	"bufio"
