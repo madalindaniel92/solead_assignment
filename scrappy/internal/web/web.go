@@ -47,8 +47,10 @@ func (c *CheckUrlResult) URL() string {
 	return c.job.url
 }
 
+type checkUrlCallback func(c *CheckUrlResult)
+
 // CheckURLs will check urls through http head requests using `numWorkers` goroutines.
-func CheckURLs(urls []string, numWorkers int) []CheckUrlResult {
+func CheckURLs(urls []string, numWorkers int, handleResult checkUrlCallback) []CheckUrlResult {
 	if numWorkers <= 0 {
 		numWorkers = 1
 	}
@@ -93,6 +95,10 @@ func CheckURLs(urls []string, numWorkers int) []CheckUrlResult {
 
 	for result := range resultCh {
 		results[result.job.index] = result
+
+		if handleResult != nil {
+			handleResult(&result)
+		}
 	}
 
 	return results

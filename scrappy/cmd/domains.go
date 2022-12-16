@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"runtime"
 
@@ -74,23 +75,44 @@ func domainAction(csvPath string, numWorkers int) error {
 	}
 
 	// Run URL checks asynchronously
-	results := web.CheckURLs(urls, numWorkers)
+	results := web.CheckURLs(urls, numWorkers, printDomainResult)
 
-	// Display results
-	printDomainResults(results)
+	// Aggregate results
+	printDomainAggregateResults(results)
 	return nil
 }
 
-func printDomainResults(results []web.CheckUrlResult) {
+func printDomainResult(result *web.CheckUrlResult) {
+	url := result.URL()
+
+	if result.Err != nil {
+		log.Printf("Failed request to domain %q: %q\n", url, result.Err)
+		return
+	}
+
+	log.Printf("HEAD %q - %d\n", url, result.Status)
+}
+
+func printDomainAggregateResults(results []web.CheckUrlResult) {
+	successful, badRequests, failed := 0, 0, 0
+	statusCount := map[int]int{}
 	for _, result := range results {
-		url := result.URL()
-
-		if result.Err != nil {
-			log.Printf("Failed request to domain %q: %q\n", url, result.Err)
-			continue
+		switch {
+		case result.Status == http.StatusOK:
+			successful++
+		case result.Err != nil:
+			failed++
+		default:
+			badRequests++
+			statusCount[result.Status]++
 		}
+	}
 
-		log.Printf("HEAD %q - %d\n", url, result.Status)
+	fmt.Printf("\nSuccessful requests: %d\n", successful)
+	fmt.Printf("Failed to connect: %d\n", failed)
+	fmt.Printf("Bad requests: %d\n", badRequests)
+	for status, count := range statusCount {
+		fmt.Printf("status %d - %d request(s)\n", status, count)
 	}
 }
 
