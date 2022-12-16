@@ -3,6 +3,7 @@ package web
 
 import (
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -26,4 +27,73 @@ func CheckURL(url string) (status int, err error) {
 	}
 
 	return response.StatusCode, nil
+}
+
+// checkUrlJob represents a job for each worker running CheckURL
+type checkUrlJob struct {
+	index int
+	url   string
+}
+
+// CheckUrlResult represents the result of each worker running CheckURL
+type CheckUrlResult struct {
+	job    checkUrlJob
+	Status int
+	Err    error
+}
+
+// URL returns the corresponding url of this job
+func (c *CheckUrlResult) URL() string {
+	return c.job.url
+}
+
+// CheckURLs will check urls through http head requests using `numWorkers` goroutines.
+func CheckURLs(urls []string, numWorkers int) []CheckUrlResult {
+	if numWorkers <= 0 {
+		numWorkers = 1
+	}
+
+	var wg sync.WaitGroup
+
+	// Slice in which results are collected
+	results := make([]CheckUrlResult, len(urls))
+
+	// Channel on which jobs are enqueued
+	jobCh := make(chan checkUrlJob, len(urls))
+
+	// Channel on which results will be received
+	resultCh := make(chan CheckUrlResult, len(urls))
+
+	for i := 0; i < numWorkers; i++ {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+
+			// Process each check url job
+			for job := range jobCh {
+				status, err := CheckURL(job.url)
+				resultCh <- CheckUrlResult{job: job, Status: status, Err: err}
+			}
+		}()
+	}
+
+	// Enqueue jobs
+	for index, url := range urls {
+		jobCh <- checkUrlJob{index: index, url: url}
+	}
+	close(jobCh)
+
+	// Once all workers complete their jobs, close the result channel
+	// to signal the top level goroutine no more results will be received
+	go func() {
+		wg.Wait()
+		close(resultCh)
+	}()
+
+	for result := range resultCh {
+		results[result.job.index] = result
+	}
+
+	return results
 }

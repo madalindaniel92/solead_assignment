@@ -14,6 +14,10 @@ type Website struct {
 	Domain url.URL
 }
 
+func (w *Website) URL() string {
+	return w.Domain.String()
+}
+
 func LoadFromFile(path string) ([]Website, error) {
 	file, err := os.Open(path)
 	if err != nil {

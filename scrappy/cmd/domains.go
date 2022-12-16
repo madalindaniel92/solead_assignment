@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 
 	"github.com/spf13/cobra"
 
@@ -37,43 +38,60 @@ var domainsCmd = &cobra.Command{
 	Long: `This command helps validate that the domains in the passed in CSV file
 	are valid URLS and reachable.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return domainAction(args[0])
+		csvPath := args[0]
+		numWorkers, err := cmd.Flags().GetInt("workers")
+		if err != nil {
+			return err
+		}
+
+		return domainAction(csvPath, numWorkers)
 	},
 }
 
 func init() {
 	checkCmd.AddCommand(domainsCmd)
+
+	domainsCmd.Flags().Int("workers", runtime.NumCPU()*20,
+		"number of concurrent workers (defaults to 20 * NumCPUs)")
 }
 
-func domainAction(csvPath string) error {
+func domainAction(csvPath string, numWorkers int) error {
 	if csvPath == "" {
 		return fmt.Errorf("missing csv file argument")
 	}
 
+	// Load website domains from CSV file
 	websites, err := csv.LoadFromFile(csvPath)
 	if err != nil {
 		printExtraErrInfo(err)
 		return err
 	}
 
-	// for _, result := range results {
-	// 	domain := result.Domain
-	// 	fmt.Printf("Domain: %s://%s\n", domain.Scheme, domain.Hostname())
-	// }
-
-	websites = websites[:5]
+	// Collect urls
+	urls := make([]string, 0, len(websites))
 	for _, website := range websites {
-		url := website.Domain.String()
-		statusCode, err := web.CheckURL(url)
-		if err != nil {
-			log.Printf("Failed request to domain %q: %q\n", url, err)
+		urls = append(urls, website.URL())
+	}
+
+	// Run URL checks asynchronously
+	results := web.CheckURLs(urls, numWorkers)
+
+	// Display results
+	printDomainResults(results)
+	return nil
+}
+
+func printDomainResults(results []web.CheckUrlResult) {
+	for _, result := range results {
+		url := result.URL()
+
+		if result.Err != nil {
+			log.Printf("Failed request to domain %q: %q\n", url, result.Err)
 			continue
 		}
 
-		log.Printf("HEAD %q - %d\n", url, statusCode)
+		log.Printf("HEAD %q - %d\n", url, result.Status)
 	}
-
-	return nil
 }
 
 func printExtraErrInfo(err error) {
