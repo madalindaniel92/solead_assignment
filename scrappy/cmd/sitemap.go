@@ -23,7 +23,7 @@ import (
 
 // sitemapCmd represents the sitemap command
 var sitemapCmd = &cobra.Command{
-	Use:          "sitemap",
+	Use:          "sitemap <domain url>",
 	Short:        "Get website links using sitemap",
 	SilenceUsage: true,
 	Args:         cobra.ExactArgs(1),

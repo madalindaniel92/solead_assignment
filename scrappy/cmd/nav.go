@@ -23,7 +23,7 @@ import (
 
 // navCmd represents the nav command
 var navCmd = &cobra.Command{
-	Use:          "nav",
+	Use:          "nav <website url>",
 	Short:        "Get website links from HTML nav element",
 	SilenceUsage: true,
 	Args:         cobra.ExactArgs(1),
