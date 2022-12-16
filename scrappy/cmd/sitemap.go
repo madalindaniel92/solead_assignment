@@ -17,7 +17,6 @@ package cmd
 
 import (
 	"examples/scrappy/internal/web"
-	"fmt"
 
 	"github.com/spf13/cobra"
 )
@@ -43,9 +42,6 @@ func sitemapAction(url string) error {
 		return err
 	}
 
-	for index, link := range links {
-		fmt.Printf("	%d %q\n", index, link)
-	}
-
+	printLinks(links)
 	return nil
 }

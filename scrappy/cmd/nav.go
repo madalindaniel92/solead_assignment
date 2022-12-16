@@ -16,24 +16,32 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
+	"examples/scrappy/internal/web"
 
 	"github.com/spf13/cobra"
 )
 
-// linksCmd represents the links command
-var linksCmd = &cobra.Command{
-	Use:     "links",
-	Aliases: []string{"l"},
-	Short:   "Strategies for getting the links from a website",
+// navCmd represents the nav command
+var navCmd = &cobra.Command{
+	Use:          "nav",
+	Short:        "Get website links from HTML nav element",
+	SilenceUsage: true,
+	Args:         cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return navLinksAction(args[0])
+	},
 }
 
 func init() {
-	rootCmd.AddCommand(linksCmd)
+	linksCmd.AddCommand(navCmd)
 }
 
-func printLinks(links []string) {
-	for index, link := range links {
-		fmt.Printf("	%d %q\n", index, link)
+func navLinksAction(url string) error {
+	links, err := web.GetLinks(url, "nav")
+	if err != nil {
+		return err
 	}
+
+	printLinks(links)
+	return nil
 }
