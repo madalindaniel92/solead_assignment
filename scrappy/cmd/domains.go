@@ -18,11 +18,13 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
 
 	"examples/scrappy/internal/csv"
+	"examples/scrappy/internal/web"
 )
 
 // domainsCmd represents the domains command
@@ -31,7 +33,7 @@ var domainsCmd = &cobra.Command{
 	Aliases:      []string{"c"},
 	SilenceUsage: true,
 	Args:         cobra.ExactArgs(1),
-	Short:        "Check CSV file for valid domains",
+	Short:        "Check CSV file and send head http request to each company domain.",
 	Long: `This command helps validate that the domains in the passed in CSV file
 	are valid URLS and reachable.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -48,15 +50,27 @@ func domainAction(csvPath string) error {
 		return fmt.Errorf("missing csv file argument")
 	}
 
-	results, err := csv.LoadFromFile(csvPath)
+	websites, err := csv.LoadFromFile(csvPath)
 	if err != nil {
 		printExtraErrInfo(err)
 		return err
 	}
 
-	for _, result := range results {
-		domain := result.Domain
-		fmt.Printf("Domain: %s://%s\n", domain.Scheme, domain.Hostname())
+	// for _, result := range results {
+	// 	domain := result.Domain
+	// 	fmt.Printf("Domain: %s://%s\n", domain.Scheme, domain.Hostname())
+	// }
+
+	websites = websites[:5]
+	for _, website := range websites {
+		url := website.Domain.String()
+		statusCode, err := web.CheckURL(url)
+		if err != nil {
+			log.Printf("Failed request to domain %q: %q\n", url, err)
+			continue
+		}
+
+		log.Printf("HEAD %q - %d\n", url, statusCode)
 	}
 
 	return nil
