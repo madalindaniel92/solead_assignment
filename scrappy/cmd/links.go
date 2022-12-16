@@ -27,5 +27,5 @@ var linksCmd = &cobra.Command{
 }
 
 func init() {
-	getCmd.AddCommand(linksCmd)
+	rootCmd.AddCommand(linksCmd)
 }

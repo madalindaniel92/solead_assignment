@@ -36,7 +36,7 @@ var robotsCmd = &cobra.Command{
 }
 
 func init() {
-	getCmd.AddCommand(robotsCmd)
+	rootCmd.AddCommand(robotsCmd)
 }
 
 func robotsAction(out io.Writer, url string) error {

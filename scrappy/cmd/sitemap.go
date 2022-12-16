@@ -27,6 +27,7 @@ var sitemapCmd = &cobra.Command{
 	Use:          "sitemap",
 	Short:        "Get website links using sitemap",
 	SilenceUsage: true,
+	Args:         cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return sitemapAction(args[0])
 	},
