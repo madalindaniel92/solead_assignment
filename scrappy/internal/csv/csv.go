@@ -1,3 +1,4 @@
+// Package CSV handling parsing and validation of input CSV files.
 package csv
 
 import (
@@ -81,7 +82,7 @@ func ParseCSV(reader io.Reader) ([]Website, error) {
 		return nil, ErrEmptyCSV
 	}
 
-	return results, scanner.Err()
+	return results, nil
 }
 
 func checkCSVHeader(line, expected string) error {
