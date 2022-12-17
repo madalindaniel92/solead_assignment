@@ -50,3 +50,29 @@ so they can be logged.
 ### Extra goals:
 - Use selenium and chromedriver to run JS on websites, so we can
       extract JS rendered content
+
+
+## Examples:
+```
+$ ./scrappy scrape phone https://mendiolagardening.com
+1 invalid phone number(s)
+Invalid phone number: "666 888 0000" ("invalid phone number")
+
+Domain: "https://mendiolagardening.com"
+ 0. "+1 510-575-7324" (a[href="tel:< phone number >"])
+ 1. "+1 888-999-0000" (a[href="tel:< phone number >"])
+
+$ ./scrappy scrape phone https://mendiolagardening.com --raw
+Domain: "https://mendiolagardening.com"
+ 0. "(510) 575-7324" (regex match)
+ 1. "666 888 0000" (regex match)
+ 2. "(510) 575 7324" (regex match)
+ 3. "(510) 575 7324" (regex match)
+ 4. "+15105757324" (a[href="tel:< phone number >"])
+ 5. "5105757324" (a[href="tel:< phone number >"])
+ 6. "5105757324" (a[href="tel:< phone number >"])
+ 7. "5105757324" (a[href="tel:< phone number >"])
+ 8. "888-999-0000" (a[href="tel:< phone number >"])
+ 9. "+15105757324" (a[href="tel:< phone number >"])
+10. "+15105757324" (a[href="tel:< phone number >"])
+```

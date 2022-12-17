@@ -29,24 +29,54 @@ var phoneCmd = &cobra.Command{
 	SilenceUsage: true,
 	Args:         cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return phoneAction(args[0])
+		raw, err := cmd.Flags().GetBool("raw")
+		if err != nil {
+			return err
+		}
+
+		return phoneAction(args[0], raw)
 	},
 }
 
 func init() {
 	scrapeCmd.AddCommand(phoneCmd)
+	phoneCmd.Flags().Bool("raw", false, "show raw scraped phone numbers, without validation or deduplication")
 }
 
-func phoneAction(url string) error {
+func phoneAction(url string, raw bool) error {
 	phoneNumbers, err := web.GetPhoneNums(url)
 	if err != nil {
 		return err
 	}
 
+	// Validate and deduplicate phone numbers when raw flag is not set.
+	if !raw {
+		var invalid []web.FailedValidation
+		phoneNumbers, invalid = web.ValidatePhoneNumbers(phoneNumbers)
+		printInvalidPhoneNumbers(invalid)
+
+		phoneNumbers = web.DedupPhoneNumbers(phoneNumbers)
+	}
+
 	fmt.Printf("Domain: %q\n", url)
+	printPhoneNumbers(phoneNumbers)
+	return nil
+}
+
+func printPhoneNumbers(phoneNumbers []web.Phone) {
 	for index, phone := range phoneNumbers {
 		fmt.Printf("%2d. %q (%s)\n", index, phone.Number, phone.Confidence)
 	}
+}
 
-	return nil
+func printInvalidPhoneNumbers(invalid []web.FailedValidation) {
+	if len(invalid) == 0 {
+		return
+	}
+
+	fmt.Printf("%d invalid phone number(s)\n", len(invalid))
+	for _, entry := range invalid {
+		fmt.Printf("Invalid phone number: %q (%q)\n", entry.Number, entry.Err)
+	}
+	fmt.Println()
 }

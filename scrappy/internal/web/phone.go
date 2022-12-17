@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
@@ -8,7 +9,11 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly/v2"
+	"github.com/nyaruka/phonenumbers"
 )
+
+// We'll handle US phone numbers for now
+const defaultPhoneRegion = "US"
 
 type PhoneNumberConfidence int
 
@@ -130,4 +135,81 @@ func MatchPhoneNumbers(text string) []Phone {
 	}
 
 	return phoneNums
+}
+
+type FailedValidation struct {
+	Index  int
+	Number string
+	Err    error
+}
+
+// ValidatePhoneNumbers validates and returns the valid phone numbers.
+//
+// Invalid numbers are returned in the second return value.
+//
+// Returned phone numbers are formatted using the international phone number scheme.
+func ValidatePhoneNumbers(phoneNums []Phone) (valid []Phone, invalid []FailedValidation) {
+	for index, phone := range phoneNums {
+		result, err := ValidatePhoneNumber(&phone)
+		if err != nil {
+			invalid = append(invalid, FailedValidation{
+				Index:  index,
+				Number: phone.Number,
+				Err:    err,
+			})
+			continue
+		}
+
+		valid = append(valid, *result)
+	}
+
+	return valid, invalid
+}
+
+// ValidatePhoneNumber validates phonenumbers, assuming they follow the
+// North American Numbering Plan and are US numbers.
+//
+// The numbers will be formatted using the national US phone number scheme.
+func ValidatePhoneNumber(phone *Phone) (*Phone, error) {
+	result, err := phonenumbers.Parse(phone.Number, defaultPhoneRegion)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", ErrInvalidPhoneNumber, err)
+	}
+
+	if !phonenumbers.IsValidNumber(result) {
+		return nil, ErrInvalidPhoneNumber
+	}
+
+	phone.Number = phonenumbers.Format(result, phonenumbers.INTERNATIONAL)
+	return phone, nil
+}
+
+// DedupPhoneNumbers deduplicates phone numbers, keeping the option with the highest confidence.
+func DedupPhoneNumbers(phoneNums []Phone) []Phone {
+	seen := map[string]PhoneNumberConfidence{}
+	results := []Phone{}
+
+	for _, phone := range phoneNums {
+		confidence, found := seen[phone.Number]
+		if found {
+			// We've already seen this number, so we compare the
+			// current confidence with the old and keep the max
+			if phone.Confidence > confidence {
+				seen[phone.Number] = phone.Confidence
+			}
+		} else {
+			// First time we see this number
+			results = append(results, phone)
+			seen[phone.Number] = phone.Confidence
+		}
+	}
+
+	// Traverse results again and set confidence to the
+	// largest value we've seen for each number
+	for index := range results {
+		result := &results[index] // we need to update through a reference
+		result.Confidence = seen[result.Number]
+	}
+
+	return results
 }
