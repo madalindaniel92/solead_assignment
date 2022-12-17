@@ -71,7 +71,7 @@ func CollectSitemapLinks(sitemapUrl string) (links []string, err error) {
 		log.Printf("Visiting %q\n", r.URL.String())
 	})
 
-	// Do the thing!
+	// Do the thing! (visit domain and start scraping)
 	err = c.Visit(domain.String())
 
 	return links, err
