@@ -1,8 +1,7 @@
-package web_test
+package phone
 
 import (
 	"errors"
-	"examples/scrappy/internal/web"
 	"reflect"
 	"testing"
 )
@@ -11,27 +10,27 @@ func TestMatchPhoneNumbers(t *testing.T) {
 	testCases := []struct {
 		name     string
 		text     string
-		expected []web.Phone
+		expected []Phone
 	}{
 		{
 			name: "number with phone prefix",
 			text: "Phone: +1 110-112-1111",
-			expected: []web.Phone{
-				{Number: "+1 110-112-1111", Confidence: web.PhoneRegexMatchWithPrefix},
+			expected: []Phone{
+				{Number: "+1 110-112-1111", Confidence: PhoneRegexMatchWithPrefix},
 			},
 		},
 		{
 			name: "number with telephone prefix",
 			text: "Telephone: 111-110-1011",
-			expected: []web.Phone{
-				{Number: "111-110-1011", Confidence: web.PhoneRegexMatchWithPrefix},
+			expected: []Phone{
+				{Number: "111-110-1011", Confidence: PhoneRegexMatchWithPrefix},
 			},
 		},
 		{
 			name: "number without phone prefix",
 			text: " +1 110-112-1111",
-			expected: []web.Phone{
-				{Number: "+1 110-112-1111", Confidence: web.PhoneRegexMatch},
+			expected: []Phone{
+				{Number: "+1 110-112-1111", Confidence: PhoneRegexMatch},
 			},
 		},
 		{
@@ -43,19 +42,19 @@ func TestMatchPhoneNumbers(t *testing.T) {
 				Telephone: 110.112.1115
 				Call me maybe: +1 110 112 1118
 			`,
-			expected: []web.Phone{
-				{Number: "+1 110-112-1111", Confidence: web.PhoneRegexMatch},
-				{Number: "+1 110-112-1112", Confidence: web.PhoneRegexMatchWithPrefix},
-				{Number: "110-112-1113", Confidence: web.PhoneRegexMatch},
-				{Number: "110.112.1115", Confidence: web.PhoneRegexMatchWithPrefix},
-				{Number: "+1 110 112 1118", Confidence: web.PhoneRegexMatch},
+			expected: []Phone{
+				{Number: "+1 110-112-1111", Confidence: PhoneRegexMatch},
+				{Number: "+1 110-112-1112", Confidence: PhoneRegexMatchWithPrefix},
+				{Number: "110-112-1113", Confidence: PhoneRegexMatch},
+				{Number: "110.112.1115", Confidence: PhoneRegexMatchWithPrefix},
+				{Number: "+1 110 112 1118", Confidence: PhoneRegexMatch},
 			},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			phoneNumbers := web.MatchPhoneNumbers(tc.text)
+			phoneNumbers := MatchPhoneNumbers(tc.text)
 
 			if !reflect.DeepEqual(phoneNumbers, tc.expected) {
 				t.Errorf("Expected %+v, got %+v instead", tc.expected, phoneNumbers)
@@ -65,7 +64,7 @@ func TestMatchPhoneNumbers(t *testing.T) {
 }
 
 func TestValidatePhoneNumbers(t *testing.T) {
-	phoneNums := []web.Phone{
+	phoneNums := []Phone{
 		// Example valid US phone number from https://stdcxx.apache.org/doc/stdlibug/26-1.html
 		{Number: "(541) 754-3010"},
 		{Number: "(555) 555-5555"},
@@ -74,17 +73,17 @@ func TestValidatePhoneNumbers(t *testing.T) {
 		{Number: "not really a phone number, lol"},
 	}
 
-	expectedValid := []web.Phone{
+	expectedValid := []Phone{
 		{Number: "+1 541-754-3010"},
 		{Number: "+1 541-754-3012"},
 		{Number: "+1 541-754-3013"},
 	}
-	expectedFailed := []web.FailedValidation{
-		{Index: 1, Number: "(555) 555-5555", Err: web.ErrInvalidPhoneNumber},
-		{Index: 4, Number: "not really a phone number, lol", Err: web.ErrInvalidPhoneNumber},
+	expectedFailed := []FailedValidation{
+		{Index: 1, Number: "(555) 555-5555", Err: ErrInvalidNumber},
+		{Index: 4, Number: "not really a phone number, lol", Err: ErrInvalidNumber},
 	}
 
-	validated, failed := web.ValidatePhoneNumbers(phoneNums)
+	validated, failed := ValidatePhoneNumbers(phoneNums)
 
 	// Check successfully validated
 	if !reflect.DeepEqual(validated, expectedValid) {
@@ -112,35 +111,35 @@ func TestValidatePhoneNumbers(t *testing.T) {
 func TestValidatePhoneNumber(t *testing.T) {
 	testCases := []struct {
 		name     string
-		phone    web.Phone
-		expected web.Phone
+		phone    Phone
+		expected Phone
 	}{
 		{
 			// Example valid US phone number from https://stdcxx.apache.org/doc/stdlibug/26-1.html
 			name:     "valid US phone number",
-			phone:    web.Phone{Number: "(541) 754-3010"},
-			expected: web.Phone{Number: "+1 541-754-3010"},
+			phone:    Phone{Number: "(541) 754-3010"},
+			expected: Phone{Number: "+1 541-754-3010"},
 		},
 		{
 			name:     "valid internationally formatted US number",
-			phone:    web.Phone{Number: "+1 541 754-3010"},
-			expected: web.Phone{Number: "+1 541-754-3010"},
+			phone:    Phone{Number: "+1 541 754-3010"},
+			expected: Phone{Number: "+1 541-754-3010"},
 		},
 		{
 			name:     "dot separated phone number",
-			phone:    web.Phone{Number: "541.754.3010"},
-			expected: web.Phone{Number: "+1 541-754-3010"},
+			phone:    Phone{Number: "541.754.3010"},
+			expected: Phone{Number: "+1 541-754-3010"},
 		},
 		{
 			name:     "no separators phone number",
-			phone:    web.Phone{Number: "5417543010"},
-			expected: web.Phone{Number: "+1 541-754-3010"},
+			phone:    Phone{Number: "5417543010"},
+			expected: Phone{Number: "+1 541-754-3010"},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result, err := web.ValidatePhoneNumber(&tc.phone)
+			result, err := ValidatePhoneNumber(&tc.phone)
 			checkNoErr(t, err)
 
 			if *result != tc.expected {
@@ -153,52 +152,52 @@ func TestValidatePhoneNumber(t *testing.T) {
 func TestValidatePhoneNumber_failure(t *testing.T) {
 	testCases := []struct {
 		name        string
-		phone       web.Phone
+		phone       Phone
 		expectedErr error
 	}{
 		{
 			name:        "invalid formatted number",
-			phone:       web.Phone{Number: "123213451234531245"},
-			expectedErr: web.ErrInvalidPhoneNumber,
+			phone:       Phone{Number: "123213451234531245"},
+			expectedErr: ErrInvalidNumber,
 		},
 		{
 			name:        "invalid correctly formatted number",
-			phone:       web.Phone{Number: "+1 555-555-5555"},
-			expectedErr: web.ErrInvalidPhoneNumber,
+			phone:       Phone{Number: "+1 555-555-5555"},
+			expectedErr: ErrInvalidNumber,
 		},
 		{
 			name:        "invalid no separators phone number",
-			phone:       web.Phone{Number: "5555555555"},
-			expectedErr: web.ErrInvalidPhoneNumber,
+			phone:       Phone{Number: "5555555555"},
+			expectedErr: ErrInvalidNumber,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := web.ValidatePhoneNumber(&tc.phone)
+			_, err := ValidatePhoneNumber(&tc.phone)
 			checkErrIs(t, err, tc.expectedErr)
 		})
 	}
 }
 
 func TestDedupPhoneNumbers(t *testing.T) {
-	phoneNums := []web.Phone{
-		{Number: "111.111.1111", Confidence: web.PhoneRegexMatch},
+	phoneNums := []Phone{
+		{Number: "111.111.1111", Confidence: PhoneRegexMatch},
 		{Number: "333.333.3333"},
 		{Number: "222.222.2222"},
-		{Number: "111.111.1111", Confidence: web.PhoneHrefTel},
-		{Number: "222.222.2222", Confidence: web.PhoneRegexMatchWithPrefix},
+		{Number: "111.111.1111", Confidence: PhoneHrefTel},
+		{Number: "222.222.2222", Confidence: PhoneRegexMatchWithPrefix},
 		{Number: "333.333.3333"},
 		{Number: "111.111.1111"},
 	}
 
-	expected := []web.Phone{
-		{Number: "111.111.1111", Confidence: web.PhoneHrefTel},
+	expected := []Phone{
+		{Number: "111.111.1111", Confidence: PhoneHrefTel},
 		{Number: "333.333.3333"},
-		{Number: "222.222.2222", Confidence: web.PhoneRegexMatchWithPrefix},
+		{Number: "222.222.2222", Confidence: PhoneRegexMatchWithPrefix},
 	}
 
-	result := web.DedupPhoneNumbers(phoneNums)
+	result := DedupPhoneNumbers(phoneNums)
 
 	if !reflect.DeepEqual(result, expected) {
 		t.Errorf("Expected %+v. got %+v instead", expected, result)

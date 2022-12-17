@@ -76,3 +76,10 @@ Domain: "https://mendiolagardening.com"
  9. "+15105757324" (a[href="tel:< phone number >"])
 10. "+15105757324" (a[href="tel:< phone number >"])
 ```
+
+
+Look into:
+```
+$ ./scrappy scrape phone https://verdantporch.com
+Error: Get "https://www.verdantporch.com/": Not following redirect to www.verdantporch.com because its not in AllowedDomains
+```

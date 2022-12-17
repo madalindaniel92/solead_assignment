@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"examples/scrappy/internal/phone"
 	"examples/scrappy/internal/web"
 	"fmt"
 
@@ -51,11 +52,11 @@ func phoneAction(url string, raw bool) error {
 
 	// Validate and deduplicate phone numbers when raw flag is not set.
 	if !raw {
-		var invalid []web.FailedValidation
-		phoneNumbers, invalid = web.ValidatePhoneNumbers(phoneNumbers)
+		var invalid []phone.FailedValidation
+		phoneNumbers, invalid = phone.ValidatePhoneNumbers(phoneNumbers)
 		printInvalidPhoneNumbers(invalid)
 
-		phoneNumbers = web.DedupPhoneNumbers(phoneNumbers)
+		phoneNumbers = phone.DedupPhoneNumbers(phoneNumbers)
 	}
 
 	fmt.Printf("Domain: %q\n", url)
@@ -63,13 +64,13 @@ func phoneAction(url string, raw bool) error {
 	return nil
 }
 
-func printPhoneNumbers(phoneNumbers []web.Phone) {
+func printPhoneNumbers(phoneNumbers []phone.Phone) {
 	for index, phone := range phoneNumbers {
 		fmt.Printf("%2d. %q (%s)\n", index, phone.Number, phone.Confidence)
 	}
 }
 
-func printInvalidPhoneNumbers(invalid []web.FailedValidation) {
+func printInvalidPhoneNumbers(invalid []phone.FailedValidation) {
 	if len(invalid) == 0 {
 		return
 	}
