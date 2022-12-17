@@ -2,9 +2,14 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 	"sync"
 	"time"
+
+	"github.com/gocolly/colly/v2"
 )
 
 const defaultTimeout time.Duration = 10 * time.Second
@@ -102,4 +107,22 @@ func CheckURLs(urls []string, numWorkers int, handleResult checkUrlCallback) []C
 	}
 
 	return results
+}
+
+// NewCollector returns a new colly Collector with default settings applied.
+func NewCollector(domain *url.URL) *colly.Collector {
+	return colly.NewCollector(colly.AllowedDomains(allowedDomains(domain)...))
+}
+
+func allowedDomains(url *url.URL) []string {
+	host := url.Host
+	allowed := []string{url.Host}
+
+	// If host does not have "www." subdomain, add it to allowed hosts.
+	// This will permit sites to redirect to their "www." subdomain when scraping
+	if !strings.HasPrefix("www.", host) {
+		allowed = append(allowed, fmt.Sprintf("www.%s", host))
+	}
+
+	return allowed
 }

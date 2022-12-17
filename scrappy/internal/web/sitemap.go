@@ -54,7 +54,7 @@ func CollectSitemapLinks(sitemapUrl string) (links []string, err error) {
 	}
 
 	// Create a collector specifically for this domain
-	c := colly.NewCollector(colly.AllowedDomains(domain.Host))
+	c := colly.NewCollector(colly.AllowedDomains(allowedDomains(domain)...))
 
 	// Extract locations from sitemap
 	c.OnXML("//urlset/url/loc", func(e *colly.XMLElement) {

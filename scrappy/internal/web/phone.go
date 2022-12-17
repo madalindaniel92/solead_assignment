@@ -20,7 +20,7 @@ func GetPhoneNums(rawUrl string) (phoneNums []phone.Phone, err error) {
 	}
 
 	// Create a collector specifically for this domain
-	c := colly.NewCollector(colly.AllowedDomains(domain.Host))
+	c := NewCollector(domain)
 
 	// Use a random delay to hopefully not get blocked by domain
 	c.Limit(&colly.LimitRule{RandomDelay: 5 * time.Second})

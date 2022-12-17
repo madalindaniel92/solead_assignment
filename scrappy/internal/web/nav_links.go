@@ -15,7 +15,7 @@ func GetLinks(rawUrl string, selector string) (links []string, err error) {
 	}
 
 	// Create a collector specifically for this domain
-	c := colly.NewCollector(colly.AllowedDomains(domain.Host))
+	c := NewCollector(domain)
 
 	// Get all of the link hrefs from each nav element
 	c.OnHTML(selector, func(e *colly.HTMLElement) {
