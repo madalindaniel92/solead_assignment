@@ -45,11 +45,7 @@ func GetPhoneNums(rawUrl string) (phoneNums []phone.Phone, err error) {
 		// Check if we have any links with a[href="tel:< phone number >"]
 		if strings.HasPrefix(href, hrefPrefix) {
 			tel := strings.TrimPrefix(href, hrefPrefix)
-
-			phoneNums = append(phoneNums, phone.Phone{
-				Number:     strings.TrimSpace(tel),
-				Confidence: phone.PhoneHrefTel,
-			})
+			phoneNums = append(phoneNums, *phone.NewFromHrefTel(tel))
 		}
 	})
 

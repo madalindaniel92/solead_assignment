@@ -168,3 +168,11 @@ func max(a, b int) int {
 	}
 	return b
 }
+
+// NewFromHrefTel returns a new Phone with confidence set to PhoneHrefTel.
+func NewFromHrefTel(tel string) *Phone {
+	return &Phone{
+		Number:     strings.TrimSpace(tel),
+		Confidence: PhoneHrefTel,
+	}
+}
