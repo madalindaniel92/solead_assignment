@@ -29,12 +29,12 @@ import (
 
 // domainsCmd represents the domains command
 var domainsCmd = &cobra.Command{
-	Use:          "domains <csv file to load domain names from>",
-	SilenceUsage: true,
-	Args:         cobra.ExactArgs(1),
-	Short:        "Check CSV file and send head http request to each company domain.",
+	Use:   "domains <csv file to load domain names from>",
+	Short: "Check CSV file and send head http request to each company domain.",
 	Long: `This command helps validate that the domains in the passed in CSV file
 	are valid URLS and reachable.`,
+	SilenceUsage: true,
+	Args:         cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		csvPath := args[0]
 		numWorkers, err := cmd.Flags().GetInt("workers")

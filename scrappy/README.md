@@ -83,3 +83,13 @@ Look into:
 $ ./scrappy scrape phone https://verdantporch.com
 Error: Get "https://www.verdantporch.com/": Not following redirect to www.verdantporch.com because its not in AllowedDomains
 ```
+
+### Grabbing certificates from Docker:
+
+sudo su
+docker volume ls
+docker volume inspect elastic_support_certs | grep Mountpoint
+Read Mountpoint
+
+cp /var/snap/docker/common/var-lib-docker/volumes/elastic_support_certs/_data/ca/ca.crt  .
+chown mds:mds ca.crt

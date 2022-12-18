@@ -1,2 +1,5 @@
 # Ignore binary
 scrappy
+
+# Elasticsearch cluster Certificate Authority
+elasticsearch_ca.crt

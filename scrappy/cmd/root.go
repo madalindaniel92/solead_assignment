@@ -18,12 +18,15 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
+
+// Configuration
 
 var cfgFile string
 
@@ -47,6 +50,11 @@ func init() {
 	// will be global for your application.
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.scrappy.yaml)")
+
+	// Read config flags from env or CLI flags
+	replacer := strings.NewReplacer("-", "_")
+	viper.SetEnvKeyReplacer(replacer)
+	viper.SetEnvPrefix("SCRAPPY_")
 }
 
 // initConfig reads in config file and ENV variables if set.

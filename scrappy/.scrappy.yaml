@@ -1,0 +1,4 @@
+es_username: elastic
+es_password: todo_use_strong_password_in_production
+es_cacert: /home/mds/projects/learn/go/solead_assignment/scrappy/elasticsearch_ca.crt
+es_url: https://localhost:9200

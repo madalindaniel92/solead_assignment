@@ -25,13 +25,12 @@ import (
 // companiesCmd represents the companies command
 var companiesCmd = &cobra.Command{
 	Use:          "companies <csv file to load company info from>",
-	SilenceUsage: true,
-	Args:         cobra.ExactArgs(1),
 	Short:        "Check companies CSV data",
 	Long:         `This command helps validate that we can parse the CSV company info data`,
+	SilenceUsage: true,
+	Args:         cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		csvPath := args[0]
-		return companiesAction(csvPath)
+		return companiesAction(args[0])
 	},
 }
 
