@@ -6,8 +6,11 @@ import (
 )
 
 var (
-	ErrInvalidCSVHeader = errors.New("csv file has invalid header")
-	ErrEmptyCSV         = errors.New("empty CSV")
+	ErrInvalidCSVHeader    = errors.New("csv file has invalid header")
+	ErrEmptyCSV            = errors.New("empty CSV")
+	ErrParseCSV            = errors.New("failed to parse line")
+	ErrWrongNumberOfFields = errors.New("wrong number of fields")
+
 	ErrInvalidURL       = errors.New("invalid URL")
 	ErrMissingURLHost   = errors.New("missing URL host")
 	ErrInvalidURLScheme = errors.New("invalid url scheme")

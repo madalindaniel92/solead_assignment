@@ -3,6 +3,8 @@ package csv
 
 import (
 	"bufio"
+	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
 	"net/url"
@@ -12,6 +14,13 @@ import (
 
 type Website struct {
 	Domain url.URL
+}
+
+type Company struct {
+	Domain            url.URL
+	CommercialName    string
+	LegalName         string
+	AllAvailableNames []string
 }
 
 func (w *Website) URL() string {
@@ -26,13 +35,26 @@ func LoadDomainsFromFile(path string) ([]Website, error) {
 	defer file.Close()
 
 	results, err := ParseDomainsCSV(file)
+	return results, wrapWithPathInfo(err, path)
+}
 
-	// Wrap error with file path information
+func LoadCompaniesFromFile(path string) ([]Company, error) {
+	file, err := os.Open(path)
 	if err != nil {
-		err = fmt.Errorf("%s - %w", path, err)
+		return nil, err
 	}
+	defer file.Close()
 
-	return results, err
+	results, err := ParseCompaniesCSV(file)
+	return results, wrapWithPathInfo(err, path)
+}
+
+// Wrap error with file path information
+func wrapWithPathInfo(err error, path string) error {
+	if err != nil {
+		return fmt.Errorf("%s - %w", path, err)
+	}
+	return nil
 }
 
 func ParseDomainsCSV(reader io.Reader) ([]Website, error) {
@@ -89,12 +111,82 @@ func ParseDomainsCSV(reader io.Reader) ([]Website, error) {
 	return results, nil
 }
 
-func checkCSVHeader(line, expected string) error {
-	if line != expected {
-		return fmt.Errorf("%w: expected '%s'", ErrInvalidCSVHeader, expected)
+var companyCSVHeader = []string{
+	"domain",
+	"company_commercial_name",
+	"company_legal_name",
+	"company_all_available_names",
+}
+
+func ParseCompaniesCSV(reader io.Reader) (companies []Company, err error) {
+	csvReader := csv.NewReader(reader)
+	// Reuse the same slice for each line, to prevent too many allocations
+	csvReader.ReuseRecord = true
+
+	// Some CSV lines may be invalid, accumulate them so we can show them in an error message
+	var invalidLines ErrInvalidCSVLines
+
+	// Header lines might appear in any order, so we need to determine the correct field indexes
+	domainIndex, commercialIndex, legalIndex, allRawIndex := 0, 0, 0, 0
+
+	// Parse each line of the CSV
+	for index := 0; true; index++ {
+		var line []string
+		line, err = csvReader.Read()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			if errors.Is(err, csv.ErrFieldCount) {
+				err = wrapWrongNumFieldsErr(err)
+				rawLine := strings.Join(line, ",")
+				invalidLines = invalidLines.Append(err, rawLine, index)
+				continue
+			}
+
+			return companies, fmt.Errorf("%w - %s", ErrParseCSV, err)
+		}
+
+		if index == 0 {
+			// Check that we have the expected headers,
+			// and determine the order in which the headers appear
+			indexes, err := checkCSVHeaders(line, companyCSVHeader)
+			if err != nil {
+				return nil, err
+			}
+			domainIndex, commercialIndex, legalIndex, allRawIndex = indexes[0], indexes[1], indexes[2], indexes[3]
+			continue
+		}
+
+		// Line length is checked by csvReader,
+		// indexes are determined from the csv header line
+		domain, commercial, legal, allRaw := line[domainIndex], line[commercialIndex], line[legalIndex], line[allRawIndex]
+		parsedURL, err := ParseURL(domain)
+		if err != nil {
+			invalidLines = invalidLines.Append(err, strings.TrimSpace(domain), index)
+			continue
+		}
+
+		companies = append(companies, Company{
+			Domain:            *parsedURL,
+			CommercialName:    strings.TrimSpace(commercial),
+			LegalName:         strings.TrimSpace(legal),
+			AllAvailableNames: splitAndTrimFields(allRaw, "|"),
+		})
 	}
 
-	return nil
+	// Check if we have invalid lines
+	if len(invalidLines) > 0 {
+		return companies, invalidLines
+	}
+
+	// Check we have some results (we consider empty CSVs an error case)
+	if len(companies) == 0 {
+		return nil, ErrEmptyCSV
+	}
+
+	return companies, nil
 }
 
 func ParseURL(rawURL string) (*url.URL, error) {
@@ -124,4 +216,59 @@ func ParseURL(rawURL string) (*url.URL, error) {
 	}
 
 	return result, nil
+}
+
+// Helpers
+
+func wrapWrongNumFieldsErr(err error) error {
+	return fmt.Errorf("%w - expected %d fields", ErrWrongNumberOfFields, len(companyCSVHeader))
+}
+
+func splitAndTrimFields(text string, separator string) []string {
+	fields := strings.Split(text, separator)
+
+	for index, field := range fields {
+		fields[index] = strings.TrimSpace(field)
+	}
+
+	return fields
+}
+
+func checkCSVHeader(line, expected string) error {
+	if line != expected {
+		return fmt.Errorf("%w: expected '%s'", ErrInvalidCSVHeader, expected)
+	}
+
+	return nil
+}
+
+// checkCSVHeaders returns an error if the actual headers don't match the expected ones.
+// In case the headers match, we return the index of each header from expected in actual
+func checkCSVHeaders(actual, expected []string) ([]int, error) {
+	if len(actual) != len(expected) {
+		return nil, ErrInvalidCSVHeader
+	}
+
+	indexes := make([]int, 0, len(expected))
+
+	for _, header := range expected {
+		index := indexOf(actual, header)
+		if index < 0 {
+			return nil, ErrInvalidCSVHeader
+		}
+
+		indexes = append(indexes, index)
+	}
+
+	return indexes, nil
+}
+
+func indexOf(values []string, needle string) int {
+	for index, value := range values {
+		if value == needle {
+			return index
+		}
+	}
+
+	return -1
 }
