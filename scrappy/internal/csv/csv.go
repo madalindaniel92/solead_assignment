@@ -242,11 +242,16 @@ func checkCSVHeader(line, expected string) error {
 	return nil
 }
 
+func expectedHeadersErr(actual, expected []string) error {
+	return fmt.Errorf("%w:\n    expected headers %v,\n    got %v instead",
+		ErrInvalidCSVHeader, expected, actual)
+}
+
 // checkCSVHeaders returns an error if the actual headers don't match the expected ones.
 // In case the headers match, we return the index of each header from expected in actual
 func checkCSVHeaders(actual, expected []string) ([]int, error) {
 	if len(actual) != len(expected) {
-		return nil, ErrInvalidCSVHeader
+		return nil, expectedHeadersErr(actual, expected)
 	}
 
 	indexes := make([]int, 0, len(expected))
@@ -254,7 +259,7 @@ func checkCSVHeaders(actual, expected []string) ([]int, error) {
 	for _, header := range expected {
 		index := indexOf(actual, header)
 		if index < 0 {
-			return nil, ErrInvalidCSVHeader
+			return nil, expectedHeadersErr(actual, expected)
 		}
 
 		indexes = append(indexes, index)
