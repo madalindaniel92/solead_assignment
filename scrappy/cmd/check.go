@@ -16,6 +16,11 @@ limitations under the License.
 package cmd
 
 import (
+	"errors"
+	"examples/scrappy/internal/csv"
+	"fmt"
+	"os"
+
 	"github.com/spf13/cobra"
 )
 
@@ -27,4 +32,14 @@ var checkCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(checkCmd)
+}
+
+func printExtraErrInfo(err error) {
+	switch value := errors.Unwrap(err).(type) {
+	case csv.ErrInvalidCSVLines:
+		for _, invalidLine := range value {
+			fmt.Fprintf(os.Stderr, "Invalid line %d %q: %s\n",
+				invalidLine.Index, invalidLine.Line, invalidLine.Err)
+		}
+	}
 }

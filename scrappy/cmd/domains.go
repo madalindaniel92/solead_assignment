@@ -16,11 +16,9 @@ limitations under the License.
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"runtime"
 
 	"github.com/spf13/cobra"
@@ -32,7 +30,6 @@ import (
 // domainsCmd represents the domains command
 var domainsCmd = &cobra.Command{
 	Use:          "domains <csv file to load domain names from>",
-	Aliases:      []string{"c"},
 	SilenceUsage: true,
 	Args:         cobra.ExactArgs(1),
 	Short:        "Check CSV file and send head http request to each company domain.",
@@ -113,15 +110,5 @@ func printDomainAggregateResults(results []web.CheckUrlResult) {
 	fmt.Printf("Bad requests: %d\n", badRequests)
 	for status, count := range statusCount {
 		fmt.Printf("status %d - %d request(s)\n", status, count)
-	}
-}
-
-func printExtraErrInfo(err error) {
-	switch value := errors.Unwrap(err).(type) {
-	case csv.ErrInvalidCSVLines:
-		for _, invalidLine := range value {
-			fmt.Fprintf(os.Stderr, "Invalid line %d %q: %s\n",
-				invalidLine.Index, invalidLine.Line, invalidLine.Err)
-		}
 	}
 }
