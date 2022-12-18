@@ -11,9 +11,11 @@
             "mode": "auto",
             "program": "main.go",
             "args": [
-                "scrape",
-                "phone",
-                "https://melatee.com"
+                "es",
+                "import",
+                "testdata/small-company-names.csv",
+                "--config",
+                ".scrappy.yaml"
             ]
         }
     ]
