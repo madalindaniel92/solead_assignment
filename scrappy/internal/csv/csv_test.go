@@ -9,7 +9,7 @@ import (
 	"examples/scrappy/internal/csv"
 )
 
-func TestParseCSV(t *testing.T) {
+func TestParseDomainsCSV(t *testing.T) {
 	testCases := []struct {
 		name     string
 		body     string
@@ -48,7 +48,7 @@ func TestParseCSV(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			reader := strings.NewReader(tc.body)
 
-			results, err := csv.ParseCSV(reader)
+			results, err := csv.ParseDomainsCSV(reader)
 			checkNoErr(t, err)
 
 			if len(results) != len(tc.expected) {
@@ -100,13 +100,13 @@ func TestParseCSV_failure(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			reader := strings.NewReader(tc.body)
 
-			_, err := csv.ParseCSV(reader)
+			_, err := csv.ParseDomainsCSV(reader)
 			checkErrIs(t, err, tc.expectedErr)
 		})
 	}
 }
 
-func TestParseCSV_invalidLines(t *testing.T) {
+func TestParseDomainsCSV_invalidLines(t *testing.T) {
 	testCases := []struct {
 		name        string
 		body        string
@@ -142,7 +142,7 @@ func TestParseCSV_invalidLines(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			reader := strings.NewReader(tc.body)
 
-			_, err := csv.ParseCSV(reader)
+			_, err := csv.ParseDomainsCSV(reader)
 			checkErrIs(t, err, tc.expectedErr)
 
 			errLines, _ := err.(csv.ErrInvalidCSVLines)

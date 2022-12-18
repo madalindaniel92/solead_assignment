@@ -18,14 +18,14 @@ func (w *Website) URL() string {
 	return w.Domain.String()
 }
 
-func LoadFromFile(path string) ([]Website, error) {
+func LoadDomainsFromFile(path string) ([]Website, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
-	results, err := ParseCSV(file)
+	results, err := ParseDomainsCSV(file)
 
 	// Wrap error with file path information
 	if err != nil {
@@ -35,7 +35,7 @@ func LoadFromFile(path string) ([]Website, error) {
 	return results, err
 }
 
-func ParseCSV(reader io.Reader) ([]Website, error) {
+func ParseDomainsCSV(reader io.Reader) ([]Website, error) {
 	var results []Website
 
 	// Some CSV lines may be invalid, accumulate them so we can show them in an error message

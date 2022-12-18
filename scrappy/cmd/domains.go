@@ -62,7 +62,7 @@ func domainAction(csvPath string, numWorkers int) error {
 	}
 
 	// Load website domains from CSV file
-	websites, err := csv.LoadFromFile(csvPath)
+	websites, err := csv.LoadDomainsFromFile(csvPath)
 	if err != nil {
 		printExtraErrInfo(err)
 		return err
