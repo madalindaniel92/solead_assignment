@@ -4,6 +4,7 @@ package csv
 import (
 	"bufio"
 	"encoding/csv"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -16,15 +17,23 @@ type Website struct {
 	Domain url.URL
 }
 
-type Company struct {
-	Domain            url.URL
-	CommercialName    string
-	LegalName         string
-	AllAvailableNames []string
-}
-
 func (w *Website) URL() string {
 	return w.Domain.String()
+}
+
+type Company struct {
+	Domain            JSONUrl  `json:"domain"`
+	CommercialName    string   `json:"commercial_name"`
+	LegalName         string   `json:"legal_name"`
+	AllAvailableNames []string `json:"all_available_names"`
+}
+
+type JSONUrl struct {
+	*url.URL
+}
+
+func (j JSONUrl) MarshalJSON() ([]byte, error) {
+	return json.Marshal(j.URL.String())
 }
 
 func LoadDomainsFromFile(path string) ([]Website, error) {
@@ -169,7 +178,7 @@ func ParseCompaniesCSV(reader io.Reader) (companies []Company, err error) {
 		}
 
 		companies = append(companies, Company{
-			Domain:            *parsedURL,
+			Domain:            JSONUrl{URL: parsedURL},
 			CommercialName:    strings.TrimSpace(commercial),
 			LegalName:         strings.TrimSpace(legal),
 			AllAvailableNames: splitAndTrimFields(allRaw, "|"),

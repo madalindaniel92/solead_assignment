@@ -1,6 +1,7 @@
 package csv_test
 
 import (
+	"encoding/json"
 	"errors"
 	"net/url"
 	"reflect"
@@ -182,7 +183,7 @@ func TestParseCompaniesCSV(t *testing.T) {
 				timent.com,Timent Technologies,,Timent Technologies | Timent`,
 			expected: []csv.Company{
 				{
-					Domain:         url.URL{Host: "bostonzen.org", Scheme: "https"},
+					Domain:         companyDomainUrl("bostonzen.org", "https"),
 					CommercialName: "Greater Boston Zen Center",
 					LegalName:      "GREATER BOSTON ZEN CENTER INC.",
 					AllAvailableNames: []string{
@@ -192,21 +193,21 @@ func TestParseCompaniesCSV(t *testing.T) {
 					},
 				},
 				{
-					Domain:         url.URL{Host: "mazautoglass.com", Scheme: "https"},
+					Domain:         companyDomainUrl("mazautoglass.com"),
 					CommercialName: "MAZ Auto Glass",
 					AllAvailableNames: []string{
 						"MAZ Auto Glass",
 					},
 				},
 				{
-					Domain:         url.URL{Host: "melatee.com", Scheme: "https"},
+					Domain:         companyDomainUrl("melatee.com"),
 					CommercialName: "Melatee",
 					AllAvailableNames: []string{
 						"Melatee",
 					},
 				},
 				{
-					Domain:         url.URL{Host: "timent.com", Scheme: "https"},
+					Domain:         companyDomainUrl("timent.com"),
 					CommercialName: "Timent Technologies",
 					AllAvailableNames: []string{
 						"Timent Technologies",
@@ -222,7 +223,7 @@ func TestParseCompaniesCSV(t *testing.T) {
 				,melatee.com,Melatee,Melatee`,
 			expected: []csv.Company{
 				{
-					Domain:         url.URL{Host: "bostonzen.org", Scheme: "https"},
+					Domain:         companyDomainUrl("bostonzen.org"),
 					CommercialName: "Greater Boston Zen Center",
 					LegalName:      "GREATER BOSTON ZEN CENTER INC.",
 					AllAvailableNames: []string{
@@ -232,7 +233,7 @@ func TestParseCompaniesCSV(t *testing.T) {
 					},
 				},
 				{
-					Domain:         url.URL{Host: "melatee.com", Scheme: "https"},
+					Domain:         companyDomainUrl("melatee.com"),
 					CommercialName: "Melatee",
 					AllAvailableNames: []string{
 						"Melatee",
@@ -258,7 +259,7 @@ func TestParseCompaniesCSV(t *testing.T) {
 			for index, result := range results {
 				expected := tc.expected[index]
 
-				checkDomainUrl(t, &result.Domain, &expected.Domain, index)
+				checkDomainUrl(t, result.Domain.URL, expected.Domain.URL, index)
 				checkCompanyNames(t, &result, &expected, index)
 			}
 		})
@@ -320,7 +321,7 @@ func TestParseCompaniesCSV_invalidLines(t *testing.T) {
 			}),
 			expectedResults: []csv.Company{
 				{
-					Domain:         url.URL{Host: "bostonzen.org", Scheme: "https"},
+					Domain:         companyDomainUrl("bostonzen.org"),
 					CommercialName: "Greater Boston Zen Center",
 					LegalName:      "GREATER BOSTON ZEN CENTER INC.",
 					AllAvailableNames: []string{
@@ -330,14 +331,14 @@ func TestParseCompaniesCSV_invalidLines(t *testing.T) {
 					},
 				},
 				{
-					Domain:         url.URL{Host: "melatee.com", Scheme: "https"},
+					Domain:         companyDomainUrl("melatee.com"),
 					CommercialName: "Melatee",
 					AllAvailableNames: []string{
 						"Melatee",
 					},
 				},
 				{
-					Domain:         url.URL{Host: "xkcd.com", Scheme: "https"},
+					Domain:         companyDomainUrl("xkcd.com"),
 					CommercialName: "XKCD",
 					LegalName:      "XKCD Comics",
 					AllAvailableNames: []string{
@@ -365,7 +366,7 @@ func TestParseCompaniesCSV_invalidLines(t *testing.T) {
 			// zip across results and expected, checking Host and Scheme
 			for index, result := range results {
 				expected := tc.expectedResults[index]
-				checkDomainUrl(t, &result.Domain, &expected.Domain, index)
+				checkDomainUrl(t, result.Domain.URL, expected.Domain.URL, index)
 				checkCompanyNames(t, &result, &expected, index)
 			}
 
@@ -396,17 +397,17 @@ func TestParseURL(t *testing.T) {
 		{
 			name:     "valid URL",
 			url:      "https://en.wikipedia.org",
-			expected: url.URL{Scheme: "https", Host: "en.wikipedia.org"},
+			expected: domainUrl("en.wikipedia.org"),
 		},
 		{
 			name:     "http URL",
 			url:      "http://why_no_tsl.org",
-			expected: url.URL{Scheme: "http", Host: "why_no_tsl.org"},
+			expected: domainUrl("why_no_tsl.org", "http"),
 		},
 		{
 			name:     "domain without scheme",
 			url:      "example.com",
-			expected: url.URL{Scheme: "https", Host: "example.com"},
+			expected: domainUrl("example.com"),
 		},
 	}
 
@@ -453,6 +454,38 @@ func TestParseURL_failure(t *testing.T) {
 	}
 }
 
+func TestMarshalCompany(t *testing.T) {
+	company := csv.Company{
+		Domain:         companyDomainUrl("bostonzen.org"),
+		CommercialName: "Greater Boston Zen Center",
+		LegalName:      "GREATER BOSTON ZEN CENTER INC.",
+		AllAvailableNames: []string{
+			"Greater Boston Zen Center",
+			"Boston Zen",
+			"GREATER BOSTON ZEN CENTER INC.",
+		},
+	}
+
+	payload, err := json.MarshalIndent(company, "\t", "\t")
+	checkNoErr(t, err)
+	encoded := string(payload)
+
+	expected := `{
+		"domain": "https://bostonzen.org",
+		"commercial_name": "Greater Boston Zen Center",
+		"legal_name": "GREATER BOSTON ZEN CENTER INC.",
+		"all_available_names": [
+			"Greater Boston Zen Center",
+			"Boston Zen",
+			"GREATER BOSTON ZEN CENTER INC."
+		]
+	}`
+
+	if encoded != expected {
+		t.Errorf("Expected %q, got %q instead", expected, encoded)
+	}
+}
+
 // Helpers
 
 func checkNoErr(t *testing.T, err error) {
@@ -471,7 +504,22 @@ func checkErrIs(t *testing.T, err error, expected error) {
 	}
 }
 
-func checkDomainUrl(t *testing.T, result *url.URL, expected *url.URL, index int) {
+func domainUrl(hostAndScheme ...string) url.URL {
+	// Default scheme is https
+	if len(hostAndScheme) == 1 {
+		hostAndScheme = append(hostAndScheme, "https")
+	}
+
+	host, scheme := hostAndScheme[0], hostAndScheme[1]
+	return url.URL{Host: host, Scheme: scheme}
+}
+
+func companyDomainUrl(hostAndScheme ...string) csv.JSONUrl {
+	url := domainUrl(hostAndScheme...)
+	return csv.JSONUrl{URL: &url}
+}
+
+func checkDomainUrl(t *testing.T, result, expected *url.URL, index int) {
 	t.Helper()
 
 	if result.Host != expected.Host {
