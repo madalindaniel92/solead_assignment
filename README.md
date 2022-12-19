@@ -5,6 +5,31 @@ Attempt at implementing a web scrapper that handles data extraction and indexing
 
 The assignment description is [here](https://soleadify.notion.site/Assignment-Software-Engineer-0c0cd6c11b1e47ea8ccc677a10160e7b).
 
+<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
+
+<!-- code_chunk_output -->
+
+- [Soleadify Assignment](#soleadify-assignment)
+  - [Software Engineer](#software-engineer)
+  - [Technical Decisions](#technical-decisions)
+    - [Use the Go programming language](#use-the-gohttpsgodev-programming-language)
+    - [Approach](#approach)
+  - [Todo (WIP)](#todo-wip)
+  - [Local setup](#local-setup)
+    - [Grabbing certificates from Docker:](#grabbing-certificates-from-docker)
+  - [Tasks](#tasks)
+    - [Parse and validate website domains from a CSV file.](#parse-and-validate-website-domains-from-a-csv-file)
+    - [Parse and validate company info from a CSV file](#parse-and-validate-company-info-from-a-csv-file)
+    - [Extract links from domain using sitemap](#extract-links-from-domain-using-sitemap)
+    - [Extract links from domain HTML anchor tags](#extract-links-from-domain-html-anchor-tags)
+    - [Scrape phone numbers from an URL](#scrape-phone-numbers-from-an-url)
+      - [Example:](#example)
+      - [Another example:](#another-example)
+      - [Yet another example:](#yet-another-example)
+
+<!-- /code_chunk_output -->
+
+
 ## Technical Decisions
 
 Here I'm going to document the technical decisions I made, and
@@ -299,7 +324,7 @@ The CLI subcommand for extracting phone number information is:
 ./scrappy scrape phone <domain with scheme information>
 ```
 
-Example:
+#### Example:
 ```sh
 ./scrappy scrape phone https://mazautoglass.com/
 ```
@@ -313,7 +338,7 @@ Domain: "https://mazautoglass.com/"
 We can see that the number has been extracted from an anchor tag,
 whose `href` attribute is of type `tel:`.
 
-Another example:
+#### Another example:
 ```sh
 ./scrappy scrape phone https://verdantporch.com
 ```
@@ -330,7 +355,7 @@ Domain: "https://verdantporch.com"
 First, we see that we found a value that is an invalid phone number.   
 Next, we can see that a number has been extracted using a regex match,
 
-Yet another example:
+#### Yet another example:
 ```sh
 $ ./scrappy scrape phone https://mendiolagardening.com
 1 invalid phone number(s)
@@ -339,8 +364,10 @@ Invalid phone number: "666 888 0000" ("invalid phone number")
 Domain: "https://mendiolagardening.com"
  0. "+1 510-575-7324" (a[href="tel:< phone number >"])
  1. "+1 888-999-0000" (a[href="tel:< phone number >"])
+```
 
 Using the `--raw` flag we get the results without validation and deduplication:
+
 ```sh
 $ ./scrappy scrape phone https://mendiolagardening.com --raw
 Domain: "https://mendiolagardening.com"
