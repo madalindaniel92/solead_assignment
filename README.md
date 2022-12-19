@@ -165,7 +165,7 @@ while 3 failed to connect.
 
 The implementation for this command is in [cmd/domains.go](/scrappy/cmd/domains.go), in the [domainAction](/scrappy/cmd/domains.go#L56) function.  
 The logic is split up into two parts:
-- [LoadDomainsFromFile](/scrappy/internal/csv/csv.go#L39) which calls     [ParseDomainsCSV](scrappy/internal/csv/csv.go#L69) to import the domain urls from the CSV file.  
+- [LoadDomainsFromFile](/scrappy/internal/csv/csv.go#L39) which calls [ParseDomainsCSV](scrappy/internal/csv/csv.go#L69) to import the domain urls from the CSV file.  
   Tests for this funcion are [csv_test.go](/scrappy/internal/csv/csv_test.go)
 
 - [CheckURLs](scrappy/internal/web/web.go#L58) which uses worker goroutines to
@@ -254,10 +254,11 @@ Output:
 ```
 
 The implementation of this command is in [cmd/sitemap.go](/scrappy/cmd/sitemap.go#L39).  
-It uses the [GetSitemapLinks]() function to fetch `robots.txt` from the domain,  
+It uses the [GetSitemapLinks](/scrappy/internal/web/sitemap.go#L30) function to fetch `robots.txt` from the domain,  
 extracts the `Sitemap:` entry from `robots.txt` if present, then extracts  
 the links from the sitemap using a [scraping framework for Go](https://github.com/gocolly/colly).
-The heart of the implementation is in the [CollectSitemapLinks](/scrappy/internal/web/sitemap.go#50) function.
+
+The XML scraping logic is in the [CollectSitemapLinks](/scrappy/internal/web/sitemap.go#L50) function.
 
 
 ### Extract links from domain HTML anchor tags
@@ -286,8 +287,7 @@ Output:
         7 "https://cumberland-river.com/category/dining/"
 ```
 
-The implementation for this subcommand is in the [cmd/nav.go.](/scrappy/cmd/nav.go#L39) file.
-
+The implementation for this subcommand is in the [cmd/nav.go.](/scrappy/cmd/nav.go#L39) file.   
 It relies on the [GetLinks](/scrappy/internal/web/nav_links.go#L11) function.
 
 
