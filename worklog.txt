@@ -1,0 +1,29 @@
+https://www.notion.so/soleadify/Assignment-Software-Engineer-0c0cd6c11b1e47ea8ccc677a10160e7b
+https://soleadify.notion.site/Assignment-Software-Engineer-0c0cd6c11b1e47ea8ccc677a10160e7b
+
+
+Time tracking:
+
+15 Dec
+    8am : 8:10am - read assignment
+    8:40 am - 11:20am back to work, start build CLI tool
+    1:25pm - 2 pm  read more about requirements, Colly, Elasticsearch (https://github.com/gocolly/colly)
+    4:20pm - 6:05pm start reading up on Elastic Search
+    6:05pm - 6:30 pm look into libphonenumbers and regexp for phone numbers :upside_down:
+    6:30pm - 7pm learn about sitemaps
+
+16 Dec:
+    9:45 am - 10:40 am - switch to using Cobra CLI
+    5:50 pm - 9pm - scrape links from sitemap, and HTML a hrefs
+
+17 Dec:
+    7:20am - 9:00am - scraping phone numbers
+    3:20pm - 4:40pm      - setup Elasticsearch and Kibana using Docker
+    6:10pm - 6:40pm      - some more Elasticsearch tutorials
+    6:40pm - 7:30pm      - more phone number parsing
+    8:30pm - 9:20pm      - phone number validation using libphonenumbers
+
+18 Dec:
+    8:40am  - 10:20am - write tests for parsing CSV data
+    5:00pm     6:20pm - learn about go-elasticsearch, figure out how to grab CA certificate from docker volume
+    7:40pm  - 10:30pm - look into go-elasticsearch some more, import company info
