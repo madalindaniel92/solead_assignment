@@ -54,6 +54,64 @@ tasks from the command line and divide the problem into smaller pieces.
 
 - Write small http server returning JSON serialized data
 
+## Local setup
+
+Currently golang is required in order to build the tool.   
+My goal is to use a Dockerfile to create a small alpine Linux container with the binary,  
+then push said binary to docker hub, allowing it to be used without Go installed.
+
+
+```sh
+# Clone repo
+git clone git@github.com:madalindaniel92/solead_assignment.git
+
+# Navigate to golang project folder
+cd solead_assignment/scrappy
+
+# Build binary
+go build
+
+# See help information for tool
+./scrappy help
+
+# Check which domains are reachable
+./scrappy check domains testdata/sample-websites.csv
+```
+
+There's also setup involved to get Elasticsearch and Kibana up and running using  
+the provided docker-compose.yml.
+
+```sh
+# Navigate to ES support folder
+cd solead_assignment/elastic_support
+
+# Pull images and start ES cluster
+docker-compose up -d
+```
+
+### Grabbing certificates from Docker:
+
+The docker-compose ElasticSearch setup uses TLS, and we need  
+to copy (or otherwise make accessible) the certificate used by the  
+local development cluster.
+
+The option I currently settled for is copying the certificate from
+
+```sh
+# Need either sudo, or current user as part of the docker group
+sudo su
+
+# Read Mountpoint value to figure out where docker mounts said volume
+docker volume inspect elastic_support_certs | grep Mountpoint
+
+# Copy certificate from volume into current work directory
+cp <volume mountpoint path>/elastic_support_certs/_data/ca/ca.crt elasticsearch_ca.crt
+
+# Make sure current user has file permissions.
+chown $USER:$USER elasticsearch_ca.crt
+```
+
+
 ## Tasks
 
 This section documents each subproblem identified, the CLI subcommand used  
@@ -319,13 +377,3 @@ In order to validate the phone numbers, a [Golang port of libphonenumbers](https
 ### Extra goals:
 - Use selenium and chromedriver to run JS on websites, so we can
       extract JS rendered content
-
-### Grabbing certificates from Docker:
-
-sudo su
-docker volume ls
-docker volume inspect elastic_support_certs | grep Mountpoint
-Read Mountpoint
-
-cp /var/snap/docker/common/var-lib-docker/volumes/elastic_support_certs/_data/ca/ca.crt  .
-chown mds:mds ca.crt
