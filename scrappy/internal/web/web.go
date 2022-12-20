@@ -34,15 +34,15 @@ func CheckURL(url string) (status int, err error) {
 	return response.StatusCode, nil
 }
 
-// checkUrlJob represents a job for each worker running CheckURL
-type checkUrlJob struct {
+// domainJob represents a job for each worker processing a different domain.
+type domainJob struct {
 	index int
 	url   string
 }
 
 // CheckUrlResult represents the result of each worker running CheckURL
 type CheckUrlResult struct {
-	job    checkUrlJob
+	job    domainJob
 	Status int
 	Err    error
 }
@@ -66,7 +66,7 @@ func CheckURLs(urls []string, numWorkers int, handleResult checkUrlCallback) []C
 	results := make([]CheckUrlResult, len(urls))
 
 	// Channel on which jobs are enqueued
-	jobCh := make(chan checkUrlJob, len(urls))
+	jobCh := make(chan domainJob, len(urls))
 
 	// Channel on which results will be received
 	resultCh := make(chan CheckUrlResult, len(urls))
@@ -87,7 +87,7 @@ func CheckURLs(urls []string, numWorkers int, handleResult checkUrlCallback) []C
 
 	// Enqueue jobs
 	for index, url := range urls {
-		jobCh <- checkUrlJob{index: index, url: url}
+		jobCh <- domainJob{index: index, url: url}
 	}
 	close(jobCh)
 
@@ -107,6 +107,19 @@ func CheckURLs(urls []string, numWorkers int, handleResult checkUrlCallback) []C
 	}
 
 	return results
+}
+
+// FilterSuccessfulDomains returns the URLs for the domains that responded with HEAD 200.
+func FilterSuccessfulDomains(results []CheckUrlResult) []string {
+	successful := make([]string, 0, len(results))
+
+	for _, result := range results {
+		if result.Status == http.StatusOK {
+			successful = append(successful, result.URL())
+		}
+	}
+
+	return successful
 }
 
 // NewCollector returns a new colly Collector with default settings applied.

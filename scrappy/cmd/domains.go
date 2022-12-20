@@ -54,21 +54,10 @@ func init() {
 }
 
 func domainAction(csvPath string, numWorkers int) error {
-	if csvPath == "" {
-		return fmt.Errorf("missing csv file argument")
-	}
-
-	// Load website domains from CSV file
-	websites, err := csv.LoadDomainsFromFile(csvPath)
+	// Load website URLs from CSV file
+	urls, err := loadDomainUrls(csvPath)
 	if err != nil {
-		printExtraErrInfo(err)
 		return err
-	}
-
-	// Collect urls
-	urls := make([]string, 0, len(websites))
-	for _, website := range websites {
-		urls = append(urls, website.URL())
 	}
 
 	// Run URL checks asynchronously
@@ -77,6 +66,28 @@ func domainAction(csvPath string, numWorkers int) error {
 	// Aggregate results
 	printDomainAggregateResults(results)
 	return nil
+}
+
+// loadDomainUrls loads the URLs from the CSV file
+func loadDomainUrls(csvPath string) (urls []string, err error) {
+	if csvPath == "" {
+		return nil, fmt.Errorf("missing csv file argument")
+	}
+
+	// Load website domains from CSV file
+	websites, err := csv.LoadDomainsFromFile(csvPath)
+	if err != nil {
+		printExtraErrInfo(err)
+		return nil, err
+	}
+
+	// Collect urls
+	urls = make([]string, 0, len(websites))
+	for _, website := range websites {
+		urls = append(urls, website.URL())
+	}
+
+	return urls, nil
 }
 
 func printDomainResult(result *web.CheckUrlResult) {

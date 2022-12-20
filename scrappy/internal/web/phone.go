@@ -13,14 +13,18 @@ import (
 
 const hrefPrefix = "tel:"
 
-func GetPhoneNums(rawUrl string) (phoneNums []phone.Phone, err error) {
-	domain, err := url.Parse(rawUrl)
+func GetValidatedPhoneNums() {
+
+}
+
+func GetPhoneNums(domain string) (phoneNums []phone.Phone, err error) {
+	domainUrl, err := url.Parse(domain)
 	if err != nil {
 		return nil, err
 	}
 
 	// Create a collector specifically for this domain
-	c := NewCollector(domain)
+	c := NewCollector(domainUrl)
 
 	// Use a random delay to hopefully not get blocked by domain
 	c.Limit(&colly.LimitRule{RandomDelay: 5 * time.Second})
@@ -50,7 +54,7 @@ func GetPhoneNums(rawUrl string) (phoneNums []phone.Phone, err error) {
 	})
 
 	// Do the thing! (visit domain and start scraping)
-	err = c.Visit(domain.String())
+	err = c.Visit(domainUrl.String())
 
 	return phoneNums, err
 }
