@@ -16,6 +16,9 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
+	"examples/scrappy/internal/es"
+	"examples/scrappy/internal/phone"
 	"examples/scrappy/internal/web"
 	"fmt"
 	"log"
@@ -56,6 +59,18 @@ type scrapeResult struct {
 }
 
 func scrapeDomainsAction(csvPath string, numWorkers int) error {
+	// Get ElasticSearch config
+	config, err := esConfig()
+	if err != nil {
+		return err
+	}
+
+	// Initialize a new ES client
+	client, err := es.NewClient(config)
+	if err != nil {
+		return err
+	}
+
 	// Load website URLs from CSV file
 	urls, err := loadDomainUrls(csvPath)
 	if err != nil {
@@ -71,12 +86,24 @@ func scrapeDomainsAction(csvPath string, numWorkers int) error {
 			return
 		}
 
+		companyInfo := map[string]any{}
+
 		url, info := result.Url, result.Info
 		if len(info.PhoneNumbers) > 0 {
 			stats.phoneNumbersCollected++
+			companyInfo["phone_numbers"] = collectPhoneNumbers(info.PhoneNumbers)
 		}
 
-		fmt.Printf("Info for %q: %#v\n", url, info)
+		// If we have new company information, update it in ElasticSearch
+		if len(companyInfo) > 0 {
+			ctx := context.Background()
+			fmt.Printf("Updating %q %#v\n", url, companyInfo)
+			err := client.UpdateCompanyInfo(ctx, url, companyInfo)
+			if err != nil {
+				log.Printf("ERROR: Failed to update company info: %s", err)
+			}
+			log.Printf("Updated info for %q, %#v\n", url, companyInfo)
+		}
 	})
 
 	printScrapeResultStats(&stats)
@@ -88,4 +115,14 @@ func printScrapeResultStats(stats *scrapeResult) {
 		fmt.Printf("Collected phone numbers for %d domain(s)\n",
 			stats.phoneNumbersCollected)
 	}
+}
+
+func collectPhoneNumbers(phoneNumbers []phone.Phone) []string {
+	results := make([]string, 0, len(phoneNumbers))
+
+	for _, phone := range phoneNumbers {
+		results = append(results, phone.Number)
+	}
+
+	return results
 }

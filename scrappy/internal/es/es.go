@@ -17,6 +17,10 @@ import (
 
 const companiesESIndex = "companies"
 
+// Helper type aliases for building nested payloads
+type h map[string]interface{}
+type a []h
+
 // Config represents the credentials needed to connect to the ElasticSearch cluster.
 type Config struct {
 	Username string

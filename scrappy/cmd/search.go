@@ -44,18 +44,21 @@ func searchCompany(query string) error {
 		return fmt.Errorf("missing query argument")
 	}
 
+	// Get ElasticSearch config
 	config, err := esConfig()
 	if err != nil {
 		return err
 	}
 
+	// Initialize a new ES client
 	client, err := es.NewClient(config)
 	if err != nil {
 		return err
 	}
 
+	// Search for company
 	ctx := context.Background()
-	result, err := client.SearchCompany(&ctx, query)
+	result, err := client.SearchCompany(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -68,5 +71,17 @@ func printSearchCompaniesResult(query string, result *es.SearchCompaniesResult) 
 	fmt.Printf("%d match the query: %q\n\n", result.Total, query)
 	for _, company := range result.Companies {
 		printCompanyInfo(&company.Company)
+		printCompanyPhoneNumbers(company.PhoneNumbers)
+		fmt.Println()
+	}
+}
+
+func printCompanyPhoneNumbers(phoneNumbers []string) {
+	if len(phoneNumbers) > 0 {
+		fmt.Println("Phone numbers:")
+	}
+
+	for _, phoneNumber := range phoneNumbers {
+		fmt.Println("    -", phoneNumber)
 	}
 }

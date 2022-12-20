@@ -11,11 +11,10 @@
             "mode": "auto",
             "program": "main.go",
             "args": [
-                "es",
-                "import",
-                "testdata/small-company-names.csv",
+                "scrape",
+                "testdata/small-sample.csv",
                 "--config",
-                ".scrappy.yaml"
+                ".scrappy.yaml",
             ]
         }
     ]

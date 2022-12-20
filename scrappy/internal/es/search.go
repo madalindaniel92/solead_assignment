@@ -17,7 +17,8 @@ var companyNameFields = []string{
 
 type Company struct {
 	csv.Company
-	ID string
+	ID           string   `json:"id"`
+	PhoneNumbers []string `json:"phone_numbers"`
 }
 
 type SearchCompaniesResult struct {
@@ -54,7 +55,7 @@ type esErrorInfo struct {
 }
 
 // SearchCompany searches ElasticSearch for a company by name.
-func (c *Client) SearchCompany(ctx *context.Context, query string) (*SearchCompaniesResult, error) {
+func (c *Client) SearchCompany(ctx context.Context, query string) (*SearchCompaniesResult, error) {
 	var result SearchCompaniesResult
 	searchAPI := c.client.Search
 
@@ -62,7 +63,7 @@ func (c *Client) SearchCompany(ctx *context.Context, query string) (*SearchCompa
 	res, err := c.client.Search(
 		searchAPI.WithIndex(c.companiesIndex),
 		searchAPI.WithBody(searchCompanyByNameQuery(query)),
-		searchAPI.WithContext(*ctx),
+		searchAPI.WithContext(ctx),
 	)
 
 	// Check network errors
@@ -73,25 +74,16 @@ func (c *Client) SearchCompany(ctx *context.Context, query string) (*SearchCompa
 
 	// Check errors returned by ES
 	if res.IsError() {
-		var e esErrorMessage
-		err := json.NewDecoder(res.Body).Decode(&e)
-		if err != nil {
-			return nil, fmt.Errorf("%w: %s", ErrUnexpectedResponse, err)
-		}
-
-		// Build detailed error message
-		err = fmt.Errorf("%w: [%s] %s: %s", ErrUnexpectedResponse,
-			res.Status(), e.Error.Type, e.Error.Reason)
-		return nil, err
+		return nil, errorFromResponse(res)
 	}
 
+	// Decode ES search response
 	var envelope searchEnvelope
 	err = json.NewDecoder(res.Body).Decode(&envelope)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrUnexpectedResponse, err)
 	}
 
-	fmt.Println("DEBUG result:", query, res)
 	result.Total = envelope.Hits.Total.Value
 	if len(envelope.Hits.Hits) < 1 {
 		return &result, nil
@@ -112,9 +104,6 @@ func (c *Client) SearchCompany(ctx *context.Context, query string) (*SearchCompa
 
 	return &result, nil
 }
-
-type h map[string]interface{}
-type a []h
 
 func searchCompanyByNameQuery(query string) io.Reader {
 	esQuery := h{
