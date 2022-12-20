@@ -25,11 +25,15 @@ type Config struct {
 	CACert []byte
 	// URL addresses of cluster replicas
 	Addresses []string
+
+	// Other ES config options that may optionally be set
+	CompaniesIndex string
 }
 
 // Client is a wrapper around the go-elasticsearch client.
 type Client struct {
-	client *elastic.Client
+	client         *elastic.Client
+	companiesIndex string
 }
 
 func NewClient(config *Config) (*Client, error) {
@@ -61,7 +65,12 @@ func NewClient(config *Config) (*Client, error) {
 		return nil, err
 	}
 
-	return &Client{client: client}, nil
+	companiesIndex := config.CompaniesIndex
+	if companiesIndex == "" {
+		companiesIndex = companiesESIndex
+	}
+
+	return &Client{client: client, companiesIndex: companiesIndex}, nil
 }
 
 func (c *Client) Info() (*esapi.Response, error) {
