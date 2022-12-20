@@ -486,6 +486,37 @@ func TestMarshalCompany(t *testing.T) {
 	}
 }
 
+func TestUnmarshalCompany(t *testing.T) {
+	payload := `{
+		"domain": "https://bostonzen.org",
+		"commercial_name": "Greater Boston Zen Center",
+		"legal_name": "GREATER BOSTON ZEN CENTER INC.",
+		"all_available_names": [
+			"Greater Boston Zen Center",
+			"Boston Zen",
+			"GREATER BOSTON ZEN CENTER INC."
+		]
+	}`
+
+	var result csv.Company
+	err := json.Unmarshal([]byte(payload), &result)
+	checkNoErr(t, err)
+
+	expected := csv.Company{
+		Domain:         companyDomainUrl("bostonzen.org"),
+		CommercialName: "Greater Boston Zen Center",
+		LegalName:      "GREATER BOSTON ZEN CENTER INC.",
+		AllAvailableNames: []string{
+			"Greater Boston Zen Center",
+			"Boston Zen",
+			"GREATER BOSTON ZEN CENTER INC.",
+		},
+	}
+
+	checkDomainUrl(t, result.Domain.URL, expected.Domain.URL, 0)
+	checkCompanyNames(t, &result, &expected, 0)
+}
+
 // Helpers
 
 func checkNoErr(t *testing.T, err error) {

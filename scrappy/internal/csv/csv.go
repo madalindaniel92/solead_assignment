@@ -36,6 +36,25 @@ func (j JSONUrl) MarshalJSON() ([]byte, error) {
 	return json.Marshal(j.URL.String())
 }
 
+func (j *JSONUrl) UnmarshalJSON(raw []byte) error {
+	// URL field is surrounded by quotes, check we have at least 2 chars
+	if len(raw) < 2 {
+		return fmt.Errorf("invalid url field")
+	}
+
+	// Strip off surrounding quotes
+	raw = raw[1 : len(raw)-1]
+
+	// Check we have an URL that can be parsed
+	parsedURL, err := url.Parse(string(raw))
+	if err != nil {
+		return err
+	}
+
+	j.URL = parsedURL
+	return nil
+}
+
 func LoadDomainsFromFile(path string) ([]Website, error) {
 	file, err := os.Open(path)
 	if err != nil {
