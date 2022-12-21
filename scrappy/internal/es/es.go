@@ -147,3 +147,12 @@ func handleBulkIndexFailure(
 		log.Printf("es index error: %q - %q", res.Error.Type, res.Error.Reason)
 	}
 }
+
+func urlToId(url string) (string, error) {
+	parsedUrl, err := csv.ParseURL(url)
+	if err != nil {
+		return "", err
+	}
+
+	return parsedUrl.Hostname(), nil
+}

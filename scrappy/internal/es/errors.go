@@ -13,6 +13,7 @@ var (
 	ErrSearchResult         = errors.New("error on search")
 	ErrUnexpectedResponse   = errors.New("unexpected response from ES")
 	ErrFailedRequest        = errors.New("failed request")
+	ErrNotFound             = errors.New("not found")
 )
 
 // errorFromResponse extracts error information from the ElasticSearch response.

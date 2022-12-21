@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"strings"
 )
 
 // UpdateCompanyInfo updates the associated field for the company
@@ -16,9 +15,12 @@ func (c *Client) UpdateCompanyInfo(ctx context.Context, url string, info map[str
 		return err
 	}
 
-	url = strings.TrimPrefix(url, "https://")
+	id, err := urlToId(url)
+	if err != nil {
+		return err
+	}
 
-	response, err := c.client.Update(c.companiesIndex, url, doc,
+	response, err := c.client.Update(c.companiesIndex, id, doc,
 		c.client.Update.WithContext(ctx),
 	)
 

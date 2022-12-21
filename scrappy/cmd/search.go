@@ -70,10 +70,14 @@ func searchCompany(query string) error {
 func printSearchCompaniesResult(query string, result *es.SearchCompaniesResult) {
 	fmt.Printf("%d match the query: %q\n\n", result.Total, query)
 	for _, company := range result.Companies {
-		printCompanyInfo(&company.Company)
-		printCompanyPhoneNumbers(company.PhoneNumbers)
+		printCompanyResult(&company)
 		fmt.Println()
 	}
+}
+
+func printCompanyResult(company *es.Company) {
+	printCompanyInfo(&company.Company)
+	printCompanyPhoneNumbers(company.PhoneNumbers)
 }
 
 func printCompanyPhoneNumbers(phoneNumbers []string) {
