@@ -26,6 +26,8 @@ The assignment description is [here](https://soleadify.notion.site/Assignment-So
       - [Example:](#example)
       - [Another example:](#another-example)
       - [Yet another example:](#yet-another-example)
+  - [Bits and pieces to sort out](#bits-and-pieces-to-sort-out)
+    - [Extra goals:](#extra-goals)
 
 <!-- /code_chunk_output -->
 
@@ -69,15 +71,14 @@ tasks from the command line and divide the problem into smaller pieces.
 
 - Import company info into elasticsearch using a the official [go-elasticsearch client](https://github.com/elastic/go-elasticsearch)
 
+## Pending documentation
+  - Indexing companies in ES
+  - Using ES search from CLI
+  - Server command
+  - Scrape concurrently command
+
 ## Todo (WIP)
-
-- Implement ES search using `multi_match` query. 
-
-- Scrape websites concurrently (only HEAD requests are currently handled concurrently)
-
 - Write Dockerfile that builds the CLI tool and shoves it into an alpine Linux image.
-
-- Write small http server returning JSON serialized data
 
 ## Local setup
 
