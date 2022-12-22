@@ -18,12 +18,12 @@ var companyNameFields = []string{
 type Company struct {
 	csv.Company
 	ID           string   `json:"id"`
-	PhoneNumbers []string `json:"phone_numbers"`
+	PhoneNumbers []string `json:"phone_numbers,omitempty"`
 }
 
 type SearchCompaniesResult struct {
-	Total     int
-	Companies []Company
+	Total     int       `json:"total"`
+	Companies []Company `json:"companies"`
 }
 
 // Documentation example code for querying ES
