@@ -4,9 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"examples/scrappy/internal/csv"
 	"fmt"
 	"io"
+
+	"examples/scrappy/internal/csv"
+	"examples/scrappy/internal/phone"
+
+	"github.com/elastic/go-elasticsearch/v8/esapi"
 )
 
 var companyNameFields = []string{
@@ -56,20 +60,39 @@ type esErrorInfo struct {
 
 // SearchCompany searches ElasticSearch for a company by name.
 func (c *Client) SearchCompany(ctx context.Context, query string) (*SearchCompaniesResult, error) {
-	var result SearchCompaniesResult
+	return c.searchQuery(ctx, searchCompanyByNameQuery(query))
+}
+
+// SearchCompanyByPhone searches ElasticSearch for a company by phone number.
+func (c *Client) SearchCompanyByPhone(ctx context.Context, phoneNumber string) (*SearchCompaniesResult, error) {
+	// Validate and normalize phone number format for US
+	phone, err := phone.ValidatePhoneNumberString(phoneNumber)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.searchQuery(ctx, searchCompanyByPhoneQuery(phone.Number))
+}
+
+func (c *Client) searchQuery(ctx context.Context, query io.Reader) (*SearchCompaniesResult, error) {
 	searchAPI := c.client.Search
 
 	// Send search request to ES
 	res, err := c.client.Search(
 		searchAPI.WithIndex(c.companiesIndex),
-		searchAPI.WithBody(searchCompanyByNameQuery(query)),
+		searchAPI.WithBody(query),
 		searchAPI.WithContext(ctx),
 	)
-
 	// Check network errors
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrSearchResult, err)
 	}
+
+	return handleSearchResponse(res)
+}
+
+func handleSearchResponse(res *esapi.Response) (*SearchCompaniesResult, error) {
+	var result SearchCompaniesResult
 	defer res.Body.Close()
 
 	// Check errors returned by ES
@@ -79,7 +102,7 @@ func (c *Client) SearchCompany(ctx context.Context, query string) (*SearchCompan
 
 	// Decode ES search response
 	var envelope searchEnvelope
-	err = json.NewDecoder(res.Body).Decode(&envelope)
+	err := json.NewDecoder(res.Body).Decode(&envelope)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrUnexpectedResponse, err)
 	}
@@ -111,6 +134,23 @@ func searchCompanyByNameQuery(query string) io.Reader {
 			"multi_match": h{
 				"query":  query,
 				"fields": companyNameFields,
+			},
+		},
+		"sort": a{
+			h{"_score": "desc"},
+			h{"_doc": "asc"},
+		},
+	}
+
+	encoded, _ := json.Marshal(esQuery)
+	return bytes.NewReader(encoded)
+}
+
+func searchCompanyByPhoneQuery(phoneNumber string) io.Reader {
+	esQuery := h{
+		"query": h{
+			"match": h{
+				"phone_numbers": phoneNumber,
 			},
 		},
 		"sort": a{
