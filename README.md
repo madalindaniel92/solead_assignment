@@ -5,6 +5,21 @@ Attempt at implementing a web scrapper that handles data extraction and indexing
 
 The assignment description is [here](https://soleadify.notion.site/Assignment-Software-Engineer-0c0cd6c11b1e47ea8ccc677a10160e7b).
 
+## Future Goals
+
+Implement scaly.
+
+Join data from company info CSV and also from scraping in memory.
+(join multiple data sources).
+
+Match against fields, then sort by level of data completion.
+(show companies with the most extracted info first)
+
+Learn Typescript well.
+
+Learn to use Elastic Search, Kafka, Cassandra, Spark.
+
+
 <!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
 
 <!-- code_chunk_output -->
