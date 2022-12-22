@@ -24,26 +24,36 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const phoneFlagKey = "phone"
+
 // searchCmd represents the search command
 var searchCmd = &cobra.Command{
 	Use:          "search <search query>",
 	Short:        "Query ElasticSearch for company by name",
 	SilenceUsage: true,
-	Args:         cobra.ExactArgs(1),
+	Args:         cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return searchCompany(args[0])
+		query := ""
+		if len(args) > 0 {
+			query = args[0]
+		}
+
+		phone, err := cmd.Flags().GetString(phoneFlagKey)
+		if err != nil {
+			return err
+		}
+
+		return searchCompany(query, phone)
 	},
 }
 
 func init() {
 	esCmd.AddCommand(searchCmd)
+
+	searchCmd.Flags().String(phoneFlagKey, "", "phone number to search by")
 }
 
-func searchCompany(query string) error {
-	if query == "" {
-		return fmt.Errorf("missing query argument")
-	}
-
+func searchCompany(query string, phone string) error {
 	// Get ElasticSearch config
 	config, err := esConfig()
 	if err != nil {
@@ -58,7 +68,7 @@ func searchCompany(query string) error {
 
 	// Search for company
 	ctx := context.Background()
-	result, err := client.SearchCompany(ctx, query)
+	result, err := client.SearchCompany(ctx, query, phone)
 	if err != nil {
 		return err
 	}

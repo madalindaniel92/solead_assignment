@@ -114,6 +114,11 @@ func ValidatePhoneNumbers(phoneNums []Phone) (valid []Phone, invalid []FailedVal
 	return valid, invalid
 }
 
+func ValidatePhoneNumberString(number string) (*Phone, error) {
+	phone := Phone{Number: number}
+	return ValidatePhoneNumber(&phone)
+}
+
 // ValidatePhoneNumber validates phonenumbers, assuming they follow the
 // North American Numbering Plan and are US numbers.
 //

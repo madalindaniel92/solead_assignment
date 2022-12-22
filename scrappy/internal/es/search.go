@@ -58,8 +58,22 @@ type esErrorInfo struct {
 	Reason string `json:"reason"`
 }
 
+// SearchCompany searches ElasticSearch for a company by name or phone number
+func (c *Client) SearchCompany(ctx context.Context, query string, phone string) (*SearchCompaniesResult, error) {
+	switch {
+	case query == "" && phone == "":
+		return nil, fmt.Errorf("%w: missing query argument", ErrInvalidParams)
+	case query != "" && phone != "":
+		return nil, fmt.Errorf("%w: must provide either query or phone number", ErrInvalidParams)
+	case phone != "":
+		return c.SearchCompanyByPhone(ctx, phone)
+	default:
+		return c.SearchCompanyByName(ctx, query)
+	}
+}
+
 // SearchCompany searches ElasticSearch for a company by name.
-func (c *Client) SearchCompany(ctx context.Context, query string) (*SearchCompaniesResult, error) {
+func (c *Client) SearchCompanyByName(ctx context.Context, query string) (*SearchCompaniesResult, error) {
 	return c.searchQuery(ctx, searchCompanyByNameQuery(query))
 }
 

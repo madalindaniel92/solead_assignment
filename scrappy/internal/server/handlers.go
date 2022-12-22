@@ -17,20 +17,20 @@ func companiesHandler(state *State) http.HandlerFunc {
 			return
 		}
 
-		// Get query parameter
-		query := r.URL.Query()
-		queryParam := query.Get("q")
+		// Get query parameters
+		queryParams := r.URL.Query()
+		query := queryParams.Get("q")
+		phone := queryParams.Get("phone")
 
-		if queryParam == "" {
-			description := "query parameter is missing"
-			err := fmt.Errorf("%w: %s", ErrInvalidRequest, description)
-			replyError(http.StatusUnprocessableEntity, w, r, err, description)
+		// Search results
+		results, err := client.SearchCompany(r.Context(), query, phone)
+		if err != nil {
+			replyError(http.StatusInternalServerError, w, r, err, "failed company search")
 			return
 		}
 
-		results, err := client.SearchCompany(r.Context(), queryParam)
-		if err != nil {
-			replyError(http.StatusInternalServerError, w, r, err, "failed company search")
+		if results.Total == 0 {
+			replyError(http.StatusNotFound, w, r, ErrNotFound, "companies not found")
 			return
 		}
 

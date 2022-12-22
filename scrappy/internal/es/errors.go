@@ -15,6 +15,7 @@ var (
 	ErrFailedRequest        = errors.New("failed request")
 	ErrNotFound             = errors.New("not found")
 	ErrInvalidIndex         = errors.New("invalid index")
+	ErrInvalidParams        = errors.New("invalid params")
 )
 
 // errorFromResponse extracts error information from the ElasticSearch response.
