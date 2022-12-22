@@ -596,6 +596,64 @@ We see in the output that we collected phone numbers from 461 of the 996 domains
 
 There is definetly room for improvement, but it's a promising start.
 
+### Start server for querying company information
+The tool should start a JSON server that allows clients  
+to search for company information.
+
+The CLI subcommand for starting the server is:
+```sh
+./scrappy server --config <ES config> --port <PORT>
+```
+
+#### Example:
+```sh
+./scrappy server --config .scrappy.yaml --port 8080
+```
+
+Output:
+```
+Using config file: .scrappy.yaml
+Listening on localhost:8080
+```
+
+Testing wich `cURL` and `jq` (jq formats the JSON document in this case):
+```sh
+curl "localhost:8080/companies?q=glass" | jq
+```
+
+Output:
+```
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   385  100   385    0     0  22307      0 --:--:-- --:--:-- --:--:-- 22647
+{
+  "total": 2,
+  "companies": [
+    {
+      "domain": "https://mazautoglass.com",
+      "commercial_name": "MAZ Auto Glass",
+      "legal_name": "",
+      "all_available_names": [
+        "MAZ Auto Glass"
+      ],
+      "id": "mazautoglass.com",
+      "phone_numbers": [
+        "+1 415-626-4474"
+      ]
+    },
+    {
+      "domain": "https://putitontheglass.com",
+      "commercial_name": "Put it on the Glass",
+      "legal_name": "",
+      "all_available_names": [
+        "Put it on the Glass"
+      ],
+      "id": "putitontheglass.com"
+    }
+  ]
+}
+```
+
 ## Bits and pieces to sort out
 
 ### Extra goals:
