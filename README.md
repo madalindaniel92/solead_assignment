@@ -26,6 +26,10 @@ The assignment description is [here](https://soleadify.notion.site/Assignment-So
       - [Example:](#example)
       - [Another example:](#another-example)
       - [Yet another example:](#yet-another-example)
+    - [Index companies in Elastic Search](#index-companies-in-elastic-search)
+    - [Get company in Elastic Search by domain](#get-company-in-elastic-search-by-domain)
+    - [Scrape company domains concurrently](#scrape-company-domains-concurrently)
+
   - [Bits and pieces to sort out](#bits-and-pieces-to-sort-out)
     - [Extra goals:](#extra-goals)
 
@@ -399,6 +403,198 @@ The command only extracts US phone numbers currently since it's easier
 to focus on a single phone number format.
 
 In order to validate the phone numbers, a [Golang port of libphonenumbers](https://github.com/nyaruka/phonenumbers#phonenumbers) is used.
+
+### Index companies in Elastic Search 
+The tool should parse the company information from a CSV file and index it in Elastic Search.
+
+The CLI subcommand for indexing companies is:
+```sh
+./scrappy es import <csv file with company info> --config <yaml config file with ES credentials>
+```
+
+#### Example:
+```sh
+./scrappy es import testdata/sample-websites-company-names.csv --config .scrappy.yaml
+```
+
+Output:
+```
+Using config file: .scrappy.yaml
+2022/12/22 11:18:44 es successfully indexed "bostonzen.org" [200] updated
+2022/12/22 11:18:44 es successfully indexed "kkcger.com" [200] updated
+2022/12/22 11:18:44 es successfully indexed "techbarstore.com" [200] updated
+2022/12/22 11:18:44 es successfully indexed "nashvilleucc.org" [200] updated
+2022/12/22 11:18:44 es successfully indexed "roux30a.com" [200] updated
+2022/12/22 11:18:44 es successfully indexed "propertyguysnj.com" [200] updated
+2022/12/22 11:18:44 es successfully indexed "wombatworks.org" [200] updated
+
+<output omitted...>
+
+2022/12/22 11:18:44 es successfully indexed "oneforallartists.com" [200] updated
+2022/12/22 11:18:44 es successfully indexed "reignvolleyball.com" [200] updated
+2022/12/22 11:18:44 es successfully indexed "mannexcavating.com" [200] updated
+Successfully indexed [997] documents
+```
+
+### Search for companies in Elastic Search
+The tool should search for companies based on name or phone number.
+
+The CLI subcommand for searching for companies by name is:
+```sh
+./scrappy es search <search query> --config <ES credentials config>
+```
+
+#### Example:
+```sh
+./scrappy es search glass --config .scrappy.yaml
+```
+
+Output:
+```
+Using config file: .scrappy.yaml
+2 match the query: "glass"
+
+Domain: https://mazautoglass.com
+Commercial name: MAZ Auto Glass
+Other names:
+    - MAZ Auto Glass
+Phone numbers:
+    - +1 415-626-4474
+
+Domain: https://putitontheglass.com
+Commercial name: Put it on the Glass
+Other names:
+    - Put it on the Glass
+
+```
+
+### Get company in Elastic Search by domain
+The tool should retrieve a company from Elastic Search by domain. 
+
+The CLI subcommand for getting a company by domain is: 
+```sh
+./scrappy es get <company domain> --config <ES credentials config>
+```
+
+#### Example:
+```sh
+./scrappy es get mazautoglass.com --config .scrappy.yaml
+```
+
+Output:
+```
+./scrappy es get mazautoglass.com --config .scrappy.yaml
+Using config file: .scrappy.yaml
+Domain: https://mazautoglass.com
+Commercial name: MAZ Auto Glass
+Other names:
+    - MAZ Auto Glass
+Phone numbers:
+    - +1 415-626-4474
+```
+
+### Scrape company domains concurrently
+The tool should scrape company websites concurrently and   
+store the new information in Elastic Search. 
+
+The CLI subcommand for scraping website domains is:
+```sh
+./scrappy scrape <csv file with domains> --config .scrappy.
+```
+
+#### Example:
+```sh
+./scrappy scrape testdata/small-sample.csv --config .scrappy.
+```
+
+Output:
+```
+Using config file: .scrappy.yaml
+2022/12/22 11:30:19 Visiting "https://coffee-homemachines.club"
+2022/12/22 11:30:19 Visiting "https://takapartners.com"
+2022/12/22 11:30:19 Visiting "https://ohanaconsulting.net"
+2022/12/22 11:30:19 Visiting "https://timent.com"
+2022/12/22 11:30:19 Visiting "https://techbarstore.com"
+2022/12/22 11:30:19 Visiting "https://bostonzen.org"
+2022/12/22 11:30:19 Visiting "https://creativebusinessassociates.com"
+2022/12/22 11:30:19 Visiting "https://mazautoglass.com"
+2022/12/22 11:30:19 Visiting "https://verdantporch.com"
+2022/12/22 11:30:19 Visiting "https://cumberland-river.com"
+2022/12/22 11:30:19 Visiting "https://tlalocrivas.com"
+2022/12/22 11:30:19 Visiting "https://melatee.com"
+2022/12/22 11:30:19 Visiting "https://postmodern-strings.com"
+2022/12/22 11:30:19 Visiting "https://workitstudio.com"
+2022/12/22 11:30:19 Visiting "https://kkcger.com"
+2022/12/22 11:30:19 Visiting "https://kansaslimousin.org"
+2022/12/22 11:30:19 Visiting "https://maddux.pro"
+2022/12/22 11:30:19 Visiting "https://mendiolagardening.com"
+2022/12/22 11:30:19 Visiting "https://thestonenc.com"
+2022/12/22 11:30:19 Failed request to domain "https://coffee-homemachines.club": "Get \"https://coffee-homemachines.club\": dial tcp: lookup coffee-homemachines.club: no such host"
+2022/12/22 11:30:19 Failed request to domain "https://maddux.pro": "Get \"https://maddux.pro\": x509: certificate is valid for *.secureserversites.net, secureserversites.net, not maddux.pro"
+Updating "https://takapartners.com" map[string]interface {}{"phone_numbers":[]string{"+1 818-583-7033"}}
+2022/12/22 11:30:19 Updated info for "https://takapartners.com", map[string]interface {}{"phone_numbers":[]string{"+1 818-583-7033"}}
+Updating "https://melatee.com" map[string]interface {}{"phone_numbers":[]string{"+1 310-472-1111"}}
+2022/12/22 11:30:19 Updated info for "https://melatee.com", map[string]interface {}{"phone_numbers":[]string{"+1 310-472-1111"}}
+Updating "https://kkcger.com" map[string]interface {}{"phone_numbers":[]string{"+1 770-824-9657", "+1 480-559-9423", "+1 458-588-0264", "+1 866-666-6666"}}
+2022/12/22 11:30:19 Updated info for "https://kkcger.com", map[string]interface {}{"phone_numbers":[]string{"+1 770-824-9657", "+1 480-559-9423", "+1 458-588-0264", "+1 866-666-6666"}}
+Updating "https://ohanaconsulting.net" map[string]interface {}{"phone_numbers":[]string{"+1 949-230-7919"}}
+2022/12/22 11:30:19 Updated info for "https://ohanaconsulting.net", map[string]interface {}{"phone_numbers":[]string{"+1 949-230-7919"}}
+Updating "https://mendiolagardening.com" map[string]interface {}{"phone_numbers":[]string{"+1 510-575-7324", "+1 888-999-0000"}}
+2022/12/22 11:30:19 Updated info for "https://mendiolagardening.com", map[string]interface {}{"phone_numbers":[]string{"+1 510-575-7324", "+1 888-999-0000"}}
+2022/12/22 11:30:19 Visiting "https://cumberland-river.com/contact/"
+2022/12/22 11:30:20 Failed request to domain "https://tlalocrivas.com": "Get \"https://tlalocrivas.com\": x509: certificate is valid for *.weebly.com, *.weeblysite.com, weebly.com, weeblysite.com, not tlalocrivas.com"
+2022/12/22 11:30:20 Visiting "https://cumberland-river.com/about/"
+Updating "https://postmodern-strings.com" map[string]interface {}{"phone_numbers":[]string{"+1 956-280-6706"}}
+2022/12/22 11:30:20 Updated info for "https://postmodern-strings.com", map[string]interface {}{"phone_numbers":[]string{"+1 956-280-6706"}}
+Updating "https://mazautoglass.com" map[string]interface {}{"phone_numbers":[]string{"+1 415-626-4474"}}
+2022/12/22 11:30:20 Visiting "https://cumberland-river.com/"
+2022/12/22 11:30:20 Updated info for "https://mazautoglass.com", map[string]interface {}{"phone_numbers":[]string{"+1 415-626-4474"}}
+Updating "https://workitstudio.com" map[string]interface {}{"phone_numbers":[]string{"+1 202-588-7363"}}
+2022/12/22 11:30:20 Updated info for "https://workitstudio.com", map[string]interface {}{"phone_numbers":[]string{"+1 202-588-7363"}}
+2022/12/22 11:30:20 Visiting "https://cumberland-river.com/links/"
+Updating "https://verdantporch.com" map[string]interface {}{"phone_numbers":[]string{"+1 910-639-7205"}}
+2022/12/22 11:30:20 Updated info for "https://verdantporch.com", map[string]interface {}{"phone_numbers":[]string{"+1 910-639-7205"}}
+2022/12/22 11:30:20 Visiting "https://cumberland-river.com/category/recommendations/"
+2022/12/22 11:30:21 Visiting "https://cumberland-river.com/category/activities/"
+2022/12/22 11:30:21 Visiting "https://bostonzen.org/contact-gbzc/"
+2022/12/22 11:30:21 Visiting "https://cumberland-river.com/category/hotels/"
+2022/12/22 11:30:21 Visiting "https://cumberland-river.com/category/dining/"
+Updating "https://creativebusinessassociates.com" map[string]interface {}{"phone_numbers":[]string{"+1 310-650-6862"}}
+2022/12/22 11:30:24 Updated info for "https://creativebusinessassociates.com", map[string]interface {}{"phone_numbers":[]string{"+1 310-650-6862"}}
+Collected phone numbers for 10 domain(s)
+```
+
+#### Example using full dataset:
+
+We use time to also measure how long it took.
+
+```sh
+time ./scrappy scrape testdata/sample-websites.csv --config .scrappy.yaml 
+```
+
+Output:
+```
+< omitted output ...>
+
+2022/12/22 11:23:13 Failed request to domain "https://brynbachman.com": "Get \"https://brynbachman.com\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"
+2022/12/22 11:23:13 Failed request to domain "https://yttangsoodo.com": "Get \"https://yttangsoodo.com\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"
+Updating "https://easystreetcookies.com" map[string]interface {}{"phone_numbers":[]string{"+1 248-891-0534"}}
+2022/12/22 11:23:13 Visiting "https://blueridgechair.com/product-category/bundles/"
+2022/12/22 11:23:13 Updated info for "https://easystreetcookies.com", map[string]interface {}{"phone_numbers":[]string{"+1 248-891-0534"}}
+2022/12/22 11:23:13 Failed request to domain "https://awlsnap.com": "Get \"https://awlsnap.com\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"
+2022/12/22 11:23:14 Failed request to domain "https://rfacapitalcorp.com": "Get \"https://rfacapitalcorp.com\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"
+2022/12/22 11:23:14 Visiting "https://blueridgechair.com/product-category/accessories/"
+2022/12/22 11:23:15 Visiting "https://blueridgechair.com/product-category/replacement-parts/"
+2022/12/22 11:23:16 Visiting "https://blueridgechair.com/product-category/collaborations/"
+
+Collected phone numbers for 461 domain(s)
+
+./scrappy scrape testdata/sample-websites.csv --config .scrappy.yaml  19.77s user 2.78s system 86% cpu 26.081 total
+```
+
+We see in the output that we collected phone numbers from 461 of the 996 domains in the CSV.
+
+There is definetly room for improvement, but it's a promising start.
 
 ## Bits and pieces to sort out
 
